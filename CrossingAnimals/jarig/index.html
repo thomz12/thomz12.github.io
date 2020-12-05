@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<title>Super secret page</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js" integrity="sha256-/H4YS+7aYb9kJ5OKhFYPUjSJdrtV6AeyJOtTkw6X72o=" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<h1>Hallo Ralf</h1>
+		<p>Voer het wachtwoord in: </p>
+		<input type="password" id="password"></input>
+		<button id="knopje">Voer in</button>
+		<p id="output">Instructies staan op de kaart.</p>
+	</body>
+	<script>
+		document.getElementById("knopje").onclick = function() {
+		
+			var textBox = document.getElementById("password").value;
+			var encryptedMsg = "U2FsdGVkX18IGhZgMXqVbexp+VkpvI1+Tmyx7gTLaxoNMAyIbt+OCZrrObV3QVT8";
+			var decryptedBytes = CryptoJS.AES.decrypt(encryptedMsg, textBox);
+			var plaintext = decryptedBytes.toString(CryptoJS.enc.Utf8);
+			
+			if(plaintext === "") {
+				document.getElementById("output").innerHTML = "Fout :(";
+			}
+			else {
+				document.getElementById("output").innerHTML = "Gefeliciteerd!!<br>Volgende code: " + plaintext + " <br><br><br>(deze kan je invoeren in de eshop :P)";
+			}
+		}
+	</script>
+</html>
