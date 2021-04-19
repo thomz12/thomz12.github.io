@@ -328,7 +328,12 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         methods: {
             Initialize: function () {
                 if (this._context == null) {
-                    this._context = new (AudioContext)();
+                    var myWindow = window;
+                    this._context = myWindow.AudioContext;
+
+                    if (this._context == null) {
+                        this._context = myWindow.webkitAudioContext;
+                    }
                 } else {
                     this._context.resume();
                 }
@@ -10728,9 +10733,30 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.FixedTimeStep = 0.016666668;
 
                 this._world = new (H5.virtualc("p2.World"))(config);
+
+                this._world.on("beginContact", H5.fn.bind(this, function () {
+                    this.BeginContact(this._world.beginContactEvent.bodyA, this._world.beginContactEvent.bodyB);
+                }), null);
+                this._world.on("endContact", H5.fn.bind(this, function () {
+                    this.EndContact(this._world.endContactEvent.bodyA, this._world.endContactEvent.bodyB);
+                }), null);
             }
         },
         methods: {
+            BeginContact: function (bodyA, bodyB) {
+                var bodyP2A = bodyA.bodyp2;
+                var bodyP2B = bodyB.bodyp2;
+
+                bodyP2A.StartCollision(bodyP2B);
+                bodyP2B.StartCollision(bodyP2A);
+            },
+            EndContact: function (bodyA, bodyB) {
+                var bodyP2A = bodyA.bodyp2;
+                var bodyP2B = bodyB.bodyp2;
+
+                bodyP2A.EndCollision(bodyP2B);
+                bodyP2B.EndCollision(bodyP2A);
+            },
             AddBody: function (body) {
                 this._world.addBody(body.body);
             },
@@ -14520,231 +14546,94 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         }
     });
 
-    H5.define("JuiceboxEngine.Physics.AABBPhysicsComponent", {
-        inherits: [JuiceboxEngine.Component],
-        fields: {
-            /**
-             * Axis aligned bounding box for this component in pixels.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @function AABB
-             * @type JuiceboxEngine.Math.RectangleF
-             */
-            AABB: null,
-            /**
-             * Offset of the AABB in pixels, relative to the object center.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @function AABBOffset
-             * @type JuiceboxEngine.Math.Vector2
-             */
-            AABBOffset: null,
-            /**
-             * Applied translation for this frame.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @function Translation
-             * @type JuiceboxEngine.Math.Vector2
-             */
-            Translation: null,
-            /**
-             * Mass of the object.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @function Mass
-             * @type number
-             */
-            Mass: 0,
-            _world: null
-        },
-        ctors: {
-            init: function () {
-                this.AABB = new JuiceboxEngine.Math.RectangleF();
-                this.AABBOffset = new JuiceboxEngine.Math.Vector2();
-                this.Translation = new JuiceboxEngine.Math.Vector2();
-            }
-        },
-        methods: {
-            Initialize: function (resourceManager) {
+    /** @namespace JuiceboxEngine.Physics */
 
-            },
-            SetWorld: function (world) {
-                this._world = world;
-            },
-            Translate: function (translation) {
-                this.Translation = translation.$clone();
-                this.Parent.Transform.Translate2D(translation.$clone());
-            },
-            Update: function () {
-                this.AABB = new JuiceboxEngine.Math.RectangleF.$ctor1(this.Parent.Transform.Position2D.$clone(), this.AABB.Width, this.AABB.Height);
-            },
-            /**
-             * Only one physics component per object.
-             *
-             * @instance
-             * @public
-             * @override
-             * @this JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsComponent
-             * @return  {boolean}
-             */
-            Unique: function () {
-                return true;
-            },
-            Destroy: function () {
-
-            }
-        }
-    });
-
-    H5.define("JuiceboxEngine.Physics.AABBPhysicsWorld", {
-        inherits: [JuiceboxEngine.Component],
-        fields: {
-            /**
-             * Number of tiles on the X axis.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsWorld
-             * @function TilesX
-             * @type number
-             */
-            TilesX: 0,
-            /**
-             * Number of tiles on the Y axis.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsWorld
-             * @function TilesY
-             * @type number
-             */
-            TilesY: 0,
-            /**
-             * Size of one tile on the X axis.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsWorld
-             * @function TileSizeX
-             * @type number
-             */
-            TileSizeX: 0,
-            /**
-             * Size of one tile on the Y axis.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.AABBPhysicsWorld
-             * @function TileSizeY
-             * @type number
-             */
-            TileSizeY: 0,
-            _tiles: null,
-            _physicsComponents: null
-        },
-        methods: {
-            Initialize: function (resourceManager) {
-                this._physicsComponents = new (System.Collections.Generic.List$1(JuiceboxEngine.Physics.AABBPhysicsComponent)).ctor();
-            },
-            InitializeWorld: function (sizeX, sizeY, tileSizeX, tileSizeY) {
-                this.TilesX = sizeX;
-                this.TilesY = sizeY;
-                this.TileSizeX = tileSizeX;
-                this.TileSizeY = tileSizeY;
-
-                this._tiles = System.Array.init(H5.Int.mul(sizeX, sizeY), 0, System.Byte);
-                this._tiles[0] = 1;
-                this._tiles[5] = 1;
-            },
-            Unique: function () {
-                return true;
-            },
-            AddPhysicsComponent: function (component) {
-                this._physicsComponents.add(component);
-                component.SetWorld(this);
-            },
-            PointToIndex: function (point) {
-                return this.PointToIndex$1(point.X, point.Y);
-            },
-            PointToIndex$1: function (x, y) {
-                return ((H5.Int.mul(y, this.TilesY) + x) | 0);
-            },
-            Update: function () {
-                for (var i = 0; i < this.TilesX; i = (i + 1) | 0) {
-                    JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(H5.Int.mul(i, this.TileSizeX), 0), new JuiceboxEngine.Math.Vector2.$ctor3(H5.Int.mul(i, this.TileSizeX), H5.Int.mul(this.TilesY, this.TileSizeY)), JuiceboxEngine.Math.Color.Red.$clone(), 1);
-                }
-
-                for (var i1 = 0; i1 < this.TilesY; i1 = (i1 + 1) | 0) {
-                    JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(0, H5.Int.mul(i1, this.TileSizeY)), new JuiceboxEngine.Math.Vector2.$ctor3(H5.Int.mul(this.TilesX, this.TileSizeX), H5.Int.mul(i1, this.TileSizeY)), JuiceboxEngine.Math.Color.Red.$clone(), 1);
-                }
-
-                for (var i2 = 0; i2 < this._physicsComponents.Count; i2 = (i2 + 1) | 0) {
-                    var component = this._physicsComponents.getItem(i2);
-
-                    if (component.Translation.X === 0 && component.Translation.Y === 0) {
-                        continue;
-                    }
-
-                    var leftTile = H5.Int.clip32(JuiceboxEngine.Math.JMath.Floor(component.AABB.Left / this.TileSizeX));
-                    var topTile = H5.Int.clip32(JuiceboxEngine.Math.JMath.Ceiling(component.AABB.Top / this.TileSizeY));
-                    var rightTile = H5.Int.clip32(JuiceboxEngine.Math.JMath.Ceiling(component.AABB.Right / this.TileSizeX));
-                    var bottomTile = H5.Int.clip32(JuiceboxEngine.Math.JMath.Floor(component.AABB.Bottom / this.TileSizeY));
-
-                    for (var y = bottomTile; y < topTile; y = (y + 1) | 0) {
-                        for (var x = leftTile; x < rightTile; x = (x + 1) | 0) {
-
-                            if (this._tiles[this.PointToIndex$1(x, y)] !== 0) {
-                                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawRectFilled(JuiceboxEngine.Math.Rectangle.op_Implicit(new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(x, this.TileSizeX), H5.Int.mul(y, this.TileSizeY), this.TileSizeX, this.TileSizeY)), JuiceboxEngine.Math.Color.Red.$clone());
-
-                                if (x === leftTile) {
-                                    component.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.mul(x, this.TileSizeX) + this.TileSizeX) | 0), component.Parent.Transform.Position2D.Y);
-                                }
-
-                                if (x === ((rightTile - 1) | 0)) {
-                                    component.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(H5.Int.mul(x, this.TileSizeX) - component.AABB.Width, component.Parent.Transform.Position2D.Y);
-                                }
-
-                                if (y === bottomTile) {
-                                    component.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(component.Parent.Transform.Position2D.X, ((H5.Int.mul(y, this.TileSizeY) + this.TileSizeY) | 0));
-                                }
-                            } else {
-                                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawRectFilled(JuiceboxEngine.Math.Rectangle.op_Implicit(new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(x, this.TileSizeX), H5.Int.mul(y, this.TileSizeY), this.TileSizeX, this.TileSizeY)), JuiceboxEngine.Math.Color.Blue.$clone());
-                            }
-
-                            if (component.Translation.X !== 0) {
-
-                            }
-
-                            if (component.Translation.Y !== 0) {
-
-                            }
-                        }
-                    }
-
-                    component.Translation = JuiceboxEngine.Math.Vector2.Zero.$clone();
-                    JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawRect(component.AABB.$clone(), JuiceboxEngine.Math.Color.Green.$clone(), 1);
-                }
-            },
-            Destroy: function () {
-
-            }
-        }
-    });
+    /**
+     * @memberof JuiceboxEngine.Physics
+     * @callback JuiceboxEngine.Physics.BodyP2.CollisionEvent
+     * @param   {JuiceboxEngine.Physics.BodyP2}    OtherBody
+     * @return  {void}
+     */
 
     H5.define("JuiceboxEngine.Physics.BodyP2", {
         inherits: [JuiceboxEngine.Component],
         fields: {
             body: null,
-            _mass: 0
+            _mass: 0,
+            _lockRotation: false,
+            _triggerOnly: false,
+            _collisions: null
+        },
+        events: {
+            /**
+             * Called when collision starts.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function addOnCollisionStart
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            /**
+             * Called when collision starts.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function removeOnCollisionStart
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            OnCollisionStart: null,
+            /**
+             * Called every frame while colliding with another object.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function addOnCollisionStay
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            /**
+             * Called every frame while colliding with another object.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function removeOnCollisionStay
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            OnCollisionStay: null,
+            /**
+             * Called when collision ends.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function addOnCollisionEnd
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            /**
+             * Called when collision ends.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function removeOnCollisionEnd
+             * @param   {JuiceboxEngine.Physics.BodyP2.CollisionEvent}    value
+             * @return  {void}
+             */
+            OnCollisionEnd: null
         },
         props: {
             /**
@@ -14765,6 +14654,44 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     this.body.mass = this._mass;
                     this.body.updateMassProperties();
                 }
+            },
+            /**
+             * Lock the rotation of the object.
+             Any forces applied won't cause the object to rotate.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function LockRotation
+             * @type boolean
+             */
+            LockRotation: {
+                get: function () {
+                    return this._lockRotation;
+                },
+                set: function (value) {
+                    this._lockRotation = value;
+                    this.body.fixedRotation = value === false ? 0 : 1;
+                }
+            },
+            /**
+             * Make this body a trigger only.
+             It will still fire collision events, but will move through other bodies.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function TriggerOnly
+             * @type boolean
+             */
+            TriggerOnly: {
+                get: function () {
+                    return this._triggerOnly;
+                },
+                set: function (value) {
+                    this._triggerOnly = value;
+                    this.body.collisionResponse = !value;
+                }
             }
         },
         ctors: {
@@ -14778,15 +14705,40 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 options.angularVelocity = 0;
 
                 this.body = new (H5.virtualc("p2.Body"))(options);
+
+                this._collisions = new (System.Collections.Generic.List$1(JuiceboxEngine.Physics.BodyP2)).ctor();
+
+                this.body.bodyp2 = this;
             }
         },
         methods: {
             Initialize: function (resourceManager) {
                 this.body.position = System.Array.init([this.Parent.Transform.Position2D.X, this.Parent.Transform.Position2D.Y], System.Double);
             },
+            /**
+             * Apply force to the body.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @param   {JuiceboxEngine.Math.Vector2}    force    The force applied to the body.
+             * @return  {void}
+             */
             ApplyForce: function (force) {
                 this.body.applyForce(System.Array.init([force.X, force.Y], System.Double));
             },
+            /**
+             * Add circle shape to the body.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @param   {number}                         radius    Radius of the circle.
+             * @param   {JuiceboxEngine.Math.Vector2}    offset    Offset from the GameObject center.
+             * @return  {void}
+             */
             AddCircle: function (radius, offset) {
                 var options = { };
                 options.position = System.Array.init([offset.X, offset.Y], System.Double);
@@ -14795,10 +14747,43 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var circle = new (H5.virtualc("p2.Circle"))(options);
                 this.body.addShape(circle);
             },
+            /**
+             * Add rectangle to the body.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Physics.BodyP2
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @param   {JuiceboxEngine.Math.RectangleF}    rect
+             * @return  {void}
+             */
+            AddRectangle: function (rect) {
+                var options = { };
+                options.width = rect.Width;
+                options.height = rect.Height;
+
+                var box = new (H5.virtualc("p2.Box"))(options);
+                box.position = System.Array.init([rect.X, rect.Y], System.Double);
+
+                this.body.addShape(box);
+            },
+            StartCollision: function (other) {
+                this._collisions.add(other);
+                !H5.staticEquals(this.OnCollisionStart, null) ? this.OnCollisionStart(other) : null;
+            },
+            EndCollision: function (other) {
+                this._collisions.remove(other);
+                !H5.staticEquals(this.OnCollisionEnd, null) ? this.OnCollisionEnd(other) : null;
+            },
             Update: function () {
                 var position = this.body.position;
+
                 this.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(position[0], position[1]);
                 this.Parent.Transform.Rotation = new JuiceboxEngine.Math.Vector3.$ctor2(this.Parent.Transform.Rotation.X, this.Parent.Transform.Rotation.Y, this.body.angle);
+
+                for (var i = 0; i < this._collisions.Count; i = (i + 1) | 0) {
+                    !H5.staticEquals(this.OnCollisionStay, null) ? this.OnCollisionStay(this._collisions.getItem(i)) : null;
+                }
             },
             Destroy: function () {
 
@@ -14949,12 +14934,14 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         inherits: [JuiceboxEngine.Scene],
         fields: {
             player: null,
-            _fps: null
+            _fps: null,
+            _ballCount: 0
         },
         ctors: {
             ctor: function (manager) {
                 this.$initialize();
                 JuiceboxEngine.Scene.ctor.call(this, manager);
+                this._ballCount = 0;
             }
         },
         methods: {
@@ -14968,7 +14955,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var playerBody = this.player.AddComponent(JuiceboxEngine.Physics.BodyP2);
                 playerBody.Mass = 10;
 
-                this.PhysicsWorld.SetGravity(new JuiceboxEngine.Math.Vector2.$ctor3(0, -100));
+                this.PhysicsWorld.SetGravity(new JuiceboxEngine.Math.Vector2.$ctor3(0, 0));
 
                 this._fps = new JuiceboxEngine.GUI.Text(this.GUI.Root);
                 this._fps.DisplayText = "fps counter";
@@ -14976,14 +14963,23 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             },
             PreUpdate: function () {
                 if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
-                    var obj = this.AddGameObject$1("obj");
+                    var obj = this.AddGameObject$1(System.String.format("ball {0}", [this._ballCount]));
+                    this._ballCount = (this._ballCount + 1) | 0;
 
                     obj.Transform.Position2D = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
+
+                    var audio = obj.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                    audio.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/juiceboxengine.mp3"));
+                    audio.Play();
 
                     var body = obj.AddComponent(JuiceboxEngine.Physics.BodyP2);
                     body.Mass = 1;
                     body.AddCircle(8, new JuiceboxEngine.Math.Vector2.$ctor3(0, 0));
+                    body.LockRotation = false;
 
+                    body.addOnCollisionStay(function (other) {
+                        JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(body.Parent.Transform.Position2D.$clone(), other.Parent.Transform.Position2D.$clone(), JuiceboxEngine.Math.Color.Red.$clone());
+                    });
 
                     var sprite = obj.AddComponent(JuiceboxEngine.Sprite);
                     sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/masterball.png");
