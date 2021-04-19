@@ -322,18 +322,15 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         ctors: {
             ctor: function () {
                 this.$initialize();
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+
                 this._context = new (AudioContext)();
             }
         },
         methods: {
             Initialize: function () {
                 if (this._context == null) {
-                    var myWindow = window;
-                    this._context = myWindow.AudioContext;
 
-                    if (this._context == null) {
-                        this._context = myWindow.webkitAudioContext;
-                    }
                 } else {
                     this._context.resume();
                 }
