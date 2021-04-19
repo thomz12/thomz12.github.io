@@ -322,71 +322,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         ctors: {
             ctor: function () {
                 this.$initialize();
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
 
-                this._context = new (AudioContext)();
-            }
-        },
-        methods: {
-            Initialize: function () {
-                if (this._context == null) {
-
-                } else {
-                    this._context.resume();
-                }
-            },
-            /**
-             * Request a clip and load it.
-             *
-             * @instance
-             * @this JuiceboxEngine.Audio.AudioManager
-             * @memberof JuiceboxEngine.Audio.AudioManager
-             * @param   {string}                            path    Path the to clip.
-             * @return  {JuiceboxEngine.Audio.AudioClip}            An audio clip, still unloaded.
-             */
-            LoadClip: function (path) {
-                var clip = new JuiceboxEngine.Audio.AudioClip();
-                clip.Name = path;
-                clip.Loaded = false;
-                clip.manager = this;
-
-                var request = new (XMLHttpRequest)();
-                request.open("GET", path);
-                request.responseType = "arraybuffer";
-
-                request.onload = H5.fn.bind(this, function (x) {
-                    var data = request.response;
-                    this._context.decodeAudioData(data, function (newData) {
-                        clip.buffer = newData;
-                    });
-                });
-
-                request.send();
-
-                return clip;
-            },
-            /**
-             * Create an audio node.
-             *
-             * @instance
-             * @this JuiceboxEngine.Audio.AudioManager
-             * @memberof JuiceboxEngine.Audio.AudioManager
-             * @return  {H5.Core..AudioBufferSourceNode}        Audio node created by the audio context.
-             */
-            CreateNode: function () {
-                return this._context.createBufferSource();
-            },
-            /**
-             * Connect the given node output to the context destination.
-             *
-             * @instance
-             * @this JuiceboxEngine.Audio.AudioManager
-             * @memberof JuiceboxEngine.Audio.AudioManager
-             * @param   {H5.Core..AudioBufferSourceNode}    node    The audio node to connect.
-             * @return  {void}
-             */
-            Connect: function (node) {
-                node.connect(this._context.destination);
             }
         }
     });
@@ -12351,15 +12287,38 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         fields: {
             Name: null,
             Loaded: false,
-            manager: null,
-            buffer: null
+            _howl: null
         },
         alias: [
             "Name", "JuiceboxEngine$Resources$IResource$Name",
             "Loaded", "JuiceboxEngine$Resources$IResource$Loaded",
             "Unload", "JuiceboxEngine$Resources$IResource$Unload"
         ],
+        ctors: {
+            ctor: function (howl) {
+                this.$initialize();
+                this._howl = howl;
+            }
+        },
         methods: {
+            Play: function () {
+                return this._howl.play();
+            },
+            Play$1: function (id) {
+                this._howl.play(id);
+            },
+            Pause: function (id) {
+                this._howl.pause(id);
+            },
+            Stop: function (id) {
+                this._howl.stop(id);
+            },
+            Loop: function (id, loop) {
+                this._howl.loop(loop, id);
+            },
+            SetPlaybackSpeed: function (id, speed) {
+                this._howl.rate(speed, id);
+            },
             Unload: function () {
 
             }
@@ -12369,7 +12328,9 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
     H5.define("JuiceboxEngine.Audio.AudioComponent", {
         inherits: [JuiceboxEngine.Component],
         fields: {
-            _source: null
+            _clip: null,
+            _id: 0,
+            _hasID: false
         },
         methods: {
             Initialize: function (resourceManager) {
@@ -12386,14 +12347,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             SetAudioClip: function (clip) {
-                if (clip.buffer == null) {
-                    System.Console.WriteLine("Audio clip buffer is null, this might result in unexpected behaviour.");
-                }
-
-                this._source = clip.manager.CreateNode();
-                this._source.buffer = clip.buffer;
-
-                clip.manager.Connect(this._source);
+                this._clip = clip;
             },
             /**
              * Start playing the audio.
@@ -12405,7 +12359,16 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Play: function () {
-                this._source.start();
+                if (this._clip == null) {
+                    return;
+                }
+
+                if (!this._hasID) {
+                    this._id = this._clip.Play();
+                    this._hasID = true;
+                } else {
+                    this._clip.Play();
+                }
             },
             /**
              * Stop playing audio.
@@ -12417,7 +12380,27 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Stop: function () {
-                this._source.stop();
+                if (this._clip == null) {
+                    return;
+                }
+
+                this._clip.Stop(this._id);
+            },
+            /**
+             * Pause the audio clip.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Audio.AudioComponent
+             * @memberof JuiceboxEngine.Audio.AudioComponent
+             * @return  {void}
+             */
+            Pause: function () {
+                if (this._clip == null) {
+                    return;
+                }
+
+                this._clip.Pause(this._id);
             },
             /**
              * Loop the audio?
@@ -12426,15 +12409,15 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @public
              * @this JuiceboxEngine.Audio.AudioComponent
              * @memberof JuiceboxEngine.Audio.AudioComponent
-             * @param   {boolean}    loop         True to loop, false to only play once.
-             * @param   {number}     loopStart    Indices at what time (in seconds) to start the loop.
-             * @param   {number}     loopEnd      Indices at what time (in seconds) to end the loop.
+             * @param   {boolean}    loop    True to loop, false to only play once.
              * @return  {void}
              */
-            Loop: function (loop, loopStart, loopEnd) {
-                if (loopStart === void 0) { loopStart = 0.0; }
-                if (loopEnd === void 0) { loopEnd = 0.0; }
-                this._source.loop = loop;
+            Loop: function (loop) {
+                if (this._clip == null) {
+                    return;
+                }
+
+                this._clip.Loop(this._id, loop);
             },
             /**
              * Change the playback rate of the audio.
@@ -12447,7 +12430,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             SetPlaybackRate: function (rate) {
-                this._source.playbackRate.value = rate;
+                if (this._clip == null) {
+                    return;
+                }
+
+                this._clip.SetPlaybackSpeed(this._id, rate);
             },
             /**
              * Audio component is not unique to a gameobject.
@@ -12505,7 +12492,20 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         },
         methods: {
             Load: function (path) {
-                return this._manager.LoadClip(path);
+                var props = { };
+                props.src = path;
+                props.autoplay = false;
+                props.loop = false;
+
+                var howl = new (Howl)(props);
+
+                var clip = new JuiceboxEngine.Audio.AudioClip(howl);
+
+                howl.on("load", function () {
+                    clip.Loaded = true;
+                });
+
+                return clip;
             }
         }
     });
@@ -14952,7 +14952,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var playerBody = this.player.AddComponent(JuiceboxEngine.Physics.BodyP2);
                 playerBody.Mass = 10;
 
-                this.PhysicsWorld.SetGravity(new JuiceboxEngine.Math.Vector2.$ctor3(0, 0));
+                this.PhysicsWorld.SetGravity(new JuiceboxEngine.Math.Vector2.$ctor3(0, -100));
 
                 this._fps = new JuiceboxEngine.GUI.Text(this.GUI.Root);
                 this._fps.DisplayText = "fps counter";
