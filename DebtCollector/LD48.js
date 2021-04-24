@@ -97,6 +97,15 @@ H5.assembly("LD48", function ($asm, globals) {
                 this.debt = System.UInt64(0);
                 this.debtPerSecond = System.UInt64(0);
                 this._timeLeft = LD48.MainScene.GAME_TIME;
+
+                JuiceboxEngine.Graphics.GraphicsManager.Instance.addOnResize(H5.fn.bind(this, function (x, y) {
+                    if (JuiceboxEngine.Util.Browser.IsMobile()) {
+                        return;
+                    }
+
+                    this._defaultZoom = y < 1000 ? 1 : 2;
+                    this.DefaultCamera.Zoom = this._defaultZoom;
+                }));
             }
         },
         methods: {
@@ -107,7 +116,7 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._fps.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(10000, 16);
 
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(63, 136, 197, 255);
-                this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -64);
+                this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -46);
                 this._defaultZoom = JuiceboxEngine.Util.Browser.IsMobile() ? 1 : 2;
                 this.DefaultCamera.Zoom = this._defaultZoom;
 
