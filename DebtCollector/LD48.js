@@ -226,6 +226,7 @@ H5.assembly("LD48", function ($asm, globals) {
 
                     var audio = { v : charge.v.AddComponent(JuiceboxEngine.Audio.AudioComponent) };
                     audio.v.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/ka-ching.mp3"));
+                    audio.v.SetVolume(0.5);
 
                     chargeHit.addOnMouseEnter((function ($me, charge, chargeSprite) {
                         return H5.fn.bind($me, function (ev) {

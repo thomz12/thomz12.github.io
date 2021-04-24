@@ -12584,6 +12584,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 props.src = path;
                 props.autoplay = false;
                 props.loop = false;
+                props.html5 = true;
 
                 var howl = new (Howl)(props);
 
