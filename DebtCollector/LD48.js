@@ -99,16 +99,20 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._timeLeft = LD48.MainScene.GAME_TIME;
 
                 JuiceboxEngine.Graphics.GraphicsManager.Instance.addOnResize(H5.fn.bind(this, function (x, y) {
-                    if (JuiceboxEngine.Util.Browser.IsMobile()) {
-                        return;
-                    }
-
-                    this._defaultZoom = y < 1000 ? 1 : 2;
-                    this.DefaultCamera.Zoom = this._defaultZoom;
+                    this.ScaleGame();
                 }));
             }
         },
         methods: {
+            ScaleGame: function () {
+                if (JuiceboxEngine.Util.Browser.IsMobile()) {
+                    this._defaultZoom = 1;
+                    return;
+                }
+
+                this._defaultZoom = JuiceboxEngine.Graphics.GraphicsManager.Instance.Height < 1000 ? 1 : 2;
+                this.DefaultCamera.Zoom = this._defaultZoom;
+            },
             InitializeScene: function () {
                 JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.UseDepth(true);
 
@@ -117,8 +121,8 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(63, 136, 197, 255);
                 this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -46);
-                this._defaultZoom = JuiceboxEngine.Util.Browser.IsMobile() ? 1 : 2;
-                this.DefaultCamera.Zoom = this._defaultZoom;
+
+                this.ScaleGame();
 
                 this._background = this.AddGameObject$1("Background");
                 var map = this._background.AddComponent(JuiceboxEngine.TileMap);
