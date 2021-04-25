@@ -45,12 +45,23 @@ H5.assembly("LD48", function ($asm, globals) {
 
     H5.define("LD48.MainMenu", {
         inherits: [JuiceboxEngine.Scene],
+        statics: {
+            fields: {
+                BPM: 0
+            },
+            ctors: {
+                init: function () {
+                    this.BPM = 132;
+                }
+            }
+        },
         fields: {
             _defaultZoom: 0,
             _title: null,
             _start: null,
             _background: null,
             _leaderboardText: null,
+            _audio: null,
             _loginID: null,
             _lowestScroll: 0
         },
@@ -107,6 +118,10 @@ H5.assembly("LD48", function ($asm, globals) {
                 map.MapData = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/backgroundData.png");
                 map.MapData.Wrap = JuiceboxEngine.Graphics.Texture2D.WrapMode.Repeat;
                 map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/background.png");
+
+                this._audio = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                this._audio.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/menu.mp3"));
+                this._audio.Play();
 
                 this._title = this.AddGameObject$1("Title");
                 this._title.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 64);
@@ -227,7 +242,12 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
                     this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize));
+
+                    this._audio.Play();
+                    this._audio.Loop(true);
                 }
+
+                this.DefaultCamera.Zoom = this._defaultZoom + JuiceboxEngine.Math.JMath.Clamp$1(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.TWO_PI * (2)), 0, 1) * 0.025;
 
                 if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
                     this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
@@ -289,6 +309,7 @@ H5.assembly("LD48", function ($asm, globals) {
             _debtPerSecondCounter: null,
             _popup: null,
             _timer: null,
+            _exit: null,
             _websiteSprite: null,
             _debtText: null,
             _debtTextShadow: null,
@@ -544,6 +565,38 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._timerText = this._timer.AddComponent(JuiceboxEngine.TextComponent);
                 this._timerText.Alignment = JuiceboxEngine.GUI.TextAlignment.Center;
                 this._timerText.DisplayText = "2:30 remaining";
+
+                var startelement = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                startelement.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(80, 20), this._defaultZoom), 2);
+                startelement.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                startelement.addOnMouseEnter(H5.fn.bind(this, function (ev) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
+                        this._exit.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.Easings.CircularEaseOut(x) / 4.0));
+                    })));
+                }));
+
+                startelement.addOnMouseExit(H5.fn.bind(this, function (ev) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
+                        this._exit.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.Easings.QuadraticEaseOut(1.0 - x) / 4.0));
+                    })));
+                }));
+
+                startelement.addOnMouseUp(H5.fn.bind(this, function (x) {
+                    this.SceneManager.SwitchToScene(new LD48.MainMenu(this.ResourceManager));
+                }));
+
+                this._exit = this.AddGameObject$1("Exit");
+                this._exit.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 96);
+
+                this._exit.AddComponent(JuiceboxEngine.UIComponent).Setup(startelement, this);
+
+                var exitSprite = this._exit.AddComponent(JuiceboxEngine.Sprite);
+                exitSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
+                exitSprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 20, 128, 20);
+                exitSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-35, -9);
+
+                this._exit.Enabled = false;
             },
             WebsiteEnter: function (ev) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
@@ -701,6 +754,8 @@ H5.assembly("LD48", function ($asm, globals) {
                         this._finished = true;
                         this._timer.Enabled = false;
 
+                        this._exit.Enabled = true;
+
                         var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["Highscore", "TotalScore", "Attempts"], System.String), System.Array.init([System.Int64.clip32(this.debt), System.Int64.clip32(this.debt), 1], System.Int32));
                         task.addOnTaskCompleted(H5.fn.bind(this, function (x) {
                             this.ShowLeaderboard();
@@ -765,6 +820,8 @@ H5.assembly("LD48", function ($asm, globals) {
                 }
 
                 this._website.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
+
+                this._exit.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + 2) * (0.09817477);
 
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
             },

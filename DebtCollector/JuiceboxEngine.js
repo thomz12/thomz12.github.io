@@ -13473,7 +13473,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Destroy: function () {
-
+                this.Stop();
             }
         }
     });

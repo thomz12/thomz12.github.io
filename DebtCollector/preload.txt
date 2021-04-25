@@ -16,3 +16,4 @@ Textures/Dollar.png
 Fonts/8-bit.bff
 Sounds/ka-ching.mp3
 Sounds/main.mp3
+Sounds/menu.mp3
