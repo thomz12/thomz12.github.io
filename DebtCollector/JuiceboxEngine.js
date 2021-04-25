@@ -5098,10 +5098,6 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             UpdateInput: function () {
                 this.InputString = "";
 
-                if (this.InputIsTouch && this._leftClick === JuiceboxEngine.Input.MouseKeyStatus.Pressed) {
-                    this._prevMousePos = this.MousePosition.$clone();
-                }
-
                 this.MouseDelta = JuiceboxEngine.Math.Vector2.op_Subtraction(this._prevMousePos.$clone(), this.MousePosition.$clone());
 
                 for (var i = 0; i < this.OnPressKeyboard.Keys.Count; i = (i + 1) | 0) {
@@ -5286,6 +5282,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var yPos = (H5.Int.clip32(rect.bottom) - H5.Int.clip32(ev.touches[0].clientY)) | 0;
 
                 this.MousePosition = new JuiceboxEngine.Math.Vector2.$ctor3(xPos / width, yPos / height);
+
+                if (this._leftClick === JuiceboxEngine.Input.MouseKeyStatus.None) {
+                    this._prevMousePos = this.MousePosition.$clone();
+                }
+
                 this._leftClick = JuiceboxEngine.Input.MouseKeyStatus.Pressed;
 
                 this.InputIsTouch = true;
@@ -5302,6 +5303,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var yPos = (H5.Int.clip32(rect.bottom) - H5.Int.clip32(ev.touches[0].clientY)) | 0;
 
                 this.MousePosition = new JuiceboxEngine.Math.Vector2.$ctor3(xPos / width, yPos / height);
+
+                if (this._leftClick === JuiceboxEngine.Input.MouseKeyStatus.None) {
+                    this._prevMousePos = this.MousePosition.$clone();
+                }
+
                 this._leftClick = JuiceboxEngine.Input.MouseKeyStatus.Down;
 
                 this.InputIsTouch = true;

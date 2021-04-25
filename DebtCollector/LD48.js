@@ -50,6 +50,7 @@ H5.assembly("LD48", function ($asm, globals) {
             _title: null,
             _start: null,
             _background: null,
+            _leaderboardText: null,
             _loginID: null,
             _lowestScroll: 0
         },
@@ -114,6 +115,13 @@ H5.assembly("LD48", function ($asm, globals) {
                 titleSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-titleSprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-titleSprite.Texture.Height) | 0), 2)) | 0));
                 titleSprite.Size = new JuiceboxEngine.Math.Vector2.$ctor3(2, 2);
 
+                this._leaderboardText = this.AddGameObject().AddComponent(JuiceboxEngine.TextComponent);
+                this._leaderboardText.Alignment = JuiceboxEngine.GUI.TextAlignment.Center;
+                this._leaderboardText.DisplayText = "Loading leaderboard...";
+                this._leaderboardText.Color = JuiceboxEngine.Math.Color.Black.$clone();
+
+                this._leaderboardText.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -48);
+
                 var startelement = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
                 startelement.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(80, 20), this._defaultZoom), 2);
                 startelement.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
@@ -160,6 +168,8 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 task.addOnTaskCompleted(H5.fn.bind(this, function (lbTask) {
                     if (lbTask.Success) {
+                        this._leaderboardText.DisplayText = "Deepest in debt:";
+
                         var leaderboardTask = H5.cast(lbTask, JuiceboxEngine.Playfab.PlayfabTaskLeaderboard);
                         var leaderboard = leaderboardTask.Leaderboard;
 
@@ -197,7 +207,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
-                            text.DisplayText = System.String.format("{0}. {1}.. - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
                             text.Color = JuiceboxEngine.Math.Color.Black.$clone();
                         }
 
@@ -207,6 +217,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             }
                         }));
                     } else {
+                        this._leaderboardText.DisplayText = "Can't load leaderboard.";
                         System.Console.WriteLine("Failed to get leaderboards... :(");
                     }
                 }));
@@ -302,7 +313,7 @@ H5.assembly("LD48", function ($asm, globals) {
         ctors: {
             init: function () {
                 var $t;
-                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "PLACEHOLDER", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(98), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "ANOTHER!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
+                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "Call me maybe.", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(98), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "Sign here, here, here!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
             },
             ctor: function (manager) {
                 this.$initialize();
