@@ -735,6 +735,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             }
 
                             entrySprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-entrySprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-entrySprite.Texture.Height) | 0), 2)) | 0));
+                            entrySprite.Priority = 0.1;
 
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
