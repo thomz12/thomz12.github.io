@@ -48,8 +48,10 @@ H5.assembly("LD48", function ($asm, globals) {
         fields: {
             _defaultZoom: 0,
             _title: null,
+            _start: null,
             _background: null,
-            _loginID: null
+            _loginID: null,
+            _lowestScroll: 0
         },
         ctors: {
             ctor: function (manager) {
@@ -110,6 +112,48 @@ H5.assembly("LD48", function ($asm, globals) {
                 var titleSprite = this._title.AddComponent(JuiceboxEngine.Sprite);
                 titleSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Title.png");
                 titleSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-titleSprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-titleSprite.Texture.Height) | 0), 2)) | 0));
+                titleSprite.Size = new JuiceboxEngine.Math.Vector2.$ctor3(2, 2);
+
+                var startelement = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                startelement.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(80, 20), this._defaultZoom), 2);
+                startelement.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                startelement.addOnMouseEnter(H5.fn.bind(this, function (ev) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
+                        this._start.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.Easings.CircularEaseOut(x) / 4.0));
+                    })));
+                }));
+
+                startelement.addOnMouseExit(H5.fn.bind(this, function (ev) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
+                        this._start.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.Easings.QuadraticEaseOut(1.0 - x) / 4.0));
+                    })));
+                }));
+
+                startelement.addOnMouseUp(H5.fn.bind(this, function (x) {
+                    if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
+                        var username = JuiceboxEngine.Util.Browser.Prompt("Leaderboard user name:", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+
+                        if (username == null) {
+                            this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                        }
+
+                        var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+                        task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+                    } else {
+                        this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                    }
+                }));
+
+                this._start = this.AddGameObject$1("Start");
+                this._start.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 0);
+
+                this._start.AddComponent(JuiceboxEngine.UIComponent).Setup(startelement, this);
+
+                var startSprite = this._start.AddComponent(JuiceboxEngine.Sprite);
+                startSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
+                startSprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 0, 128, 20);
+                startSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-35, -9);
             },
             ShowLeaderboard: function () {
                 var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard("Highscore", 0, 100);
@@ -128,6 +172,8 @@ H5.assembly("LD48", function ($asm, globals) {
                             entries[i] = lbEntryObj;
 
                             lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
+
+                            this._lowestScroll = H5.Int.mul(-20, i);
 
                             var entrySprite = lbEntryObj.AddComponent(JuiceboxEngine.Sprite);
                             entrySprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
@@ -151,7 +197,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
-                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, entry.value);
+                            text.DisplayText = System.String.format("{0}. {1}.. - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
                             text.Color = JuiceboxEngine.Math.Color.Black.$clone();
                         }
 
@@ -176,28 +222,24 @@ H5.assembly("LD48", function ($asm, globals) {
                     this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
                 }
 
-                this._title.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
-
-                if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyReleased(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
-                    if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
-                        var username = JuiceboxEngine.Util.Browser.Prompt("Leaderboard user name:", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
-
-                        if (username == null) {
-                            this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
-                        }
-
-                        var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
-                        task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
-                    } else {
-                        this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
-                    }
+                if (this.DefaultCamera.Parent.Transform.Position2D.Y < this._lowestScroll) {
+                    this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, this._lowestScroll);
                 }
+
+                this._title.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
+                this._start.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + 1) * (0.09817477);
             },
             UpdateUsername: function (task) {
                 if (task.Success) {
                     this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
                 } else {
                     var username = JuiceboxEngine.Util.Browser.Prompt("Something went wrong. " + (task.ErrorMessage || ""), System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+
+                    if (username == null) {
+                        this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                        return;
+                    }
+
                     var newTask = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
                     newTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
                 }
@@ -253,6 +295,7 @@ H5.assembly("LD48", function ($asm, globals) {
             _defaultZoom: 0,
             _popupEnabledThisFrame: false,
             _finished: false,
+            _lowestScroll: 0,
             FixedCharges: null,
             _fixedChargesGenerated: null
         },
@@ -558,7 +601,7 @@ H5.assembly("LD48", function ($asm, globals) {
              * @return  {string}                    Presentable string representing the value.
              */
             GetDisplayString: function (value) {
-                return System.String.format("${0}", [H5.toString(value)]);
+                return System.String.format("${0}", [value.toString("#,##")]);
             },
             /**
              * Convert a number to a small presentable string.
@@ -591,6 +634,8 @@ H5.assembly("LD48", function ($asm, globals) {
 
                             lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
 
+                            this._lowestScroll = H5.Int.mul(-20, i);
+
                             var entrySprite = lbEntryObj.AddComponent(JuiceboxEngine.Sprite);
                             entrySprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
 
@@ -613,7 +658,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
-                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, entry.value);
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
                             text.Color = JuiceboxEngine.Math.Color.Black.$clone();
                         }
 
@@ -630,11 +675,15 @@ H5.assembly("LD48", function ($asm, globals) {
             PreUpdate: function () {
                 if (this._timeLeft < 0) {
                     if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
-                        this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom));
+                        this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize));
                     }
 
                     if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
                         this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
+                    }
+
+                    if (this.DefaultCamera.Parent.Transform.Position2D.Y < this._lowestScroll) {
+                        this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, this._lowestScroll);
                     }
 
                     if (!this._finished) {

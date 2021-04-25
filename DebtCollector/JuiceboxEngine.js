@@ -5098,6 +5098,10 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             UpdateInput: function () {
                 this.InputString = "";
 
+                if (this.InputIsTouch && this._leftClick === JuiceboxEngine.Input.MouseKeyStatus.Pressed) {
+                    this._prevMousePos = this.MousePosition.$clone();
+                }
+
                 this.MouseDelta = JuiceboxEngine.Math.Vector2.op_Subtraction(this._prevMousePos.$clone(), this.MousePosition.$clone());
 
                 for (var i = 0; i < this.OnPressKeyboard.Keys.Count; i = (i + 1) | 0) {
