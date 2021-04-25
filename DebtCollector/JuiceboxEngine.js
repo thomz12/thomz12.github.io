@@ -5433,13 +5433,14 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @instance
              * @public
              * @memberof JuiceboxEngine.JuiceboxGame
+             * @function ResourceManager
              * @type JuiceboxEngine.Resources.ResourceManager
              */
             ResourceManager: null,
+            AudioManager: null,
             _preloader: null,
             _graphicsManager: null,
             _inputManager: null,
-            _audioManager: null,
             _sceneManager: null,
             /**
              * The currently active scene.
@@ -5468,7 +5469,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                 this._inputManager = new JuiceboxEngine.Input.InputManager();
 
-                this._audioManager = new JuiceboxEngine.Audio.AudioManager();
+                this.AudioManager = new JuiceboxEngine.Audio.AudioManager();
 
                 this.ResourceManager = new JuiceboxEngine.Resources.ResourceManager();
                 this.RegisterLoaders(this.ResourceManager);
@@ -5513,7 +5514,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             RegisterLoaders: function (resourceManager) {
                 this._graphicsManager.RegisterLoaders(resourceManager);
 
-                resourceManager.RegisterResourceManager(new JuiceboxEngine.Audio.AudioLoader(this._audioManager));
+                resourceManager.RegisterResourceManager(new JuiceboxEngine.Audio.AudioLoader(this.AudioManager));
             },
             /**
              * Update the engine.
@@ -10785,6 +10786,907 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         }
     });
 
+    /** @namespace JuiceboxEngine.Playfab */
+
+    /**
+     * Leaderboard class, containing general leaderboard info and entries.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.Leaderboard
+     */
+    H5.define("JuiceboxEngine.Playfab.Leaderboard", {
+        fields: {
+            /**
+             * Leaderboard entries.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function Entries
+             * @type System.Collections.Generic.List$1
+             */
+            Entries: null,
+            /**
+             * Name of the leaderboard statistic.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function Name
+             * @type string
+             */
+            Name: null,
+            /**
+             * Indicates if this leaderboard has retrieved any data.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function HasLeaderboardData
+             * @type boolean
+             */
+            HasLeaderboardData: false,
+            /**
+             * Leaderboard start position.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function StartPosition
+             * @type number
+             */
+            StartPosition: 0,
+            /**
+             * Maximum results in the leaderboard.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function MaxResults
+             * @type number
+             */
+            MaxResults: 0,
+            /**
+             * Next leaderboard reset.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function NextReset
+             * @type System.DateTime
+             */
+            NextReset: null,
+            /**
+             * Indicates whether or not this leaderboard will reset.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @function WillReset
+             * @type boolean
+             */
+            WillReset: false
+        },
+        ctors: {
+            init: function () {
+                this.NextReset = System.DateTime.getDefaultValue();
+            },
+            /**
+             * Leaderboard constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.Leaderboard
+             * @memberof JuiceboxEngine.Playfab.Leaderboard
+             * @param   {string}    statisticName    Statistics name as in Playfab.
+             * @param   {number}    startPos         Start position to get leaderboard data from.
+             * @param   {number}    amount           Amount of entries to get.
+             * @return  {void}
+             */
+            ctor: function (statisticName, startPos, amount) {
+                this.$initialize();
+                this.Name = statisticName;
+                this.HasLeaderboardData = false;
+                this.StartPosition = startPos;
+                this.MaxResults = amount;
+
+                this.WillReset = false;
+
+                this.Entries = new (System.Collections.Generic.List$1(JuiceboxEngine.Playfab.LeaderboardEntry)).ctor();
+            }
+        }
+    });
+
+    /**
+     * Leaderboard entry, part of a leaderboard.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.LeaderboardEntry
+     */
+    H5.define("JuiceboxEngine.Playfab.LeaderboardEntry", {
+        $kind: "struct",
+        statics: {
+            methods: {
+                getDefaultValue: function () { return new JuiceboxEngine.Playfab.LeaderboardEntry(); }
+            }
+        },
+        fields: {
+            /**
+             * User display name.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.LeaderboardEntry
+             * @type string
+             */
+            displayName: null,
+            /**
+             * User Playfab ID.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.LeaderboardEntry
+             * @type string
+             */
+            playfabId: null,
+            /**
+             * Position in the leaderboard.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.LeaderboardEntry
+             * @type number
+             */
+            position: 0,
+            /**
+             * Value of the stat.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.LeaderboardEntry
+             * @type number
+             */
+            value: 0
+        },
+        ctors: {
+            ctor: function () {
+                this.$initialize();
+            }
+        },
+        methods: {
+            getHashCode: function () {
+                var h = H5.addHash([6754582144, this.displayName, this.playfabId, this.position, this.value]);
+                return h;
+            },
+            equals: function (o) {
+                if (!H5.is(o, JuiceboxEngine.Playfab.LeaderboardEntry)) {
+                    return false;
+                }
+                return H5.equals(this.displayName, o.displayName) && H5.equals(this.playfabId, o.playfabId) && H5.equals(this.position, o.position) && H5.equals(this.value, o.value);
+            },
+            $clone: function (to) {
+                var s = to || new JuiceboxEngine.Playfab.LeaderboardEntry();
+                s.displayName = this.displayName;
+                s.playfabId = this.playfabId;
+                s.position = this.position;
+                s.value = this.value;
+                return s;
+            }
+        }
+    });
+
+    /**
+     * Playfab news item.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.NewsItem
+     */
+    H5.define("JuiceboxEngine.Playfab.NewsItem", {
+        fields: {
+            /**
+             * News item title.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.NewsItem
+             * @function Title
+             * @type string
+             */
+            Title: null,
+            /**
+             * News item body.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.NewsItem
+             * @function Body
+             * @type string
+             */
+            Body: null,
+            /**
+             * News item id.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.NewsItem
+             * @function NewsId
+             * @type string
+             */
+            NewsId: null,
+            /**
+             * News item timestamp.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.NewsItem
+             * @function Timestamp
+             * @type string
+             */
+            Timestamp: null
+        },
+        ctors: {
+            /**
+             * Constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.NewsItem
+             * @memberof JuiceboxEngine.Playfab.NewsItem
+             * @param   {object}    json    News item json from the server.
+             * @return  {void}
+             */
+            ctor: function (json) {
+                this.$initialize();
+                this.Title = json.Title;
+                this.Body = json.Body;
+                this.NewsId = json.NewsId;
+                this.Timestamp = json.Timestamp;
+            }
+        }
+    });
+
+    /**
+     * Deals with Playfab authorization. 
+     Takes care of the {@link }.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabIdentity
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabIdentity", {
+        fields: {
+            /**
+             * Logged in or not.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @function LoggedIn
+             * @type boolean
+             */
+            LoggedIn: false,
+            /**
+             * Player user name, if logged in. {@link }
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @function Username
+             * @type string
+             */
+            Username: null,
+            /**
+             * Player Playfab ID, if logged in. {@link }
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @function PlayfabId
+             * @type string
+             */
+            PlayfabId: null,
+            /**
+             * Task that gets the user profile after signing in.
+             Player profile data can be retrieved here if it succeeds.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @function GetDisplayNameTask
+             * @type JuiceboxEngine.Playfab.PlayfabTask
+             */
+            GetDisplayNameTask: null,
+            /**
+             * Task that is used for login or register.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @function LoginTask
+             * @type JuiceboxEngine.Playfab.PlayfabTask
+             */
+            LoginTask: null
+        },
+        ctors: {
+            /**
+             * Constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabIdentity
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @return  {void}
+             */
+            ctor: function () {
+                this.$initialize();
+                this.LoggedIn = false;
+                this.Username = "";
+                this.PlayfabId = "";
+            }
+        },
+        methods: {
+            /**
+             * Login witn a custom ID.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabIdentity
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @param   {string}                                ID               The custom ID.
+             * @param   {boolean}                               createAccount    Create a new account?
+             * @return  {JuiceboxEngine.Playfab.PlayfabTask}
+             */
+            LoginWithCustomID: function (ID, createAccount) {
+                var request = { };
+                request.CreateAccount = createAccount;
+                request.CustomId = ID;
+                request.TitleId = JuiceboxEngine.Playfab.PlayfabManager.TitleId;
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTask();
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.OnLoginWithCustomIDComplete));
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.LoginWithCustomID(request, task.callback);
+
+                this.LoginTask = task;
+                return task;
+            },
+            OnLoginWithCustomIDComplete: function (task) {
+                if (task.Success) {
+                    this.LoggedIn = true;
+                    this.Username = "";
+                    this.PlayfabId = task.Response.PlayFabId;
+                }
+
+                this.GetDisplayNameTask = this.GetDisplayName(this.PlayfabId);
+                this.GetDisplayNameTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.OnGetDisplayNameCompleted));
+            },
+            OnGetDisplayNameCompleted: function (task) {
+                if (task.Success) {
+                    this.Username = task.Response.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+                }
+            },
+            /**
+             * Register a new player.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabIdentity
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @param   {string}                                username    Player unique username.
+             * @param   {string}                                email       Player unique email.
+             * @param   {string}                                password    Player password.
+             * @return  {JuiceboxEngine.Playfab.PlayfabTask}
+             */
+            RegisterPlayer: function (username, email, password) {
+                var request = { };
+                request.Email = email;
+                request.DisplayName = username;
+                request.Password = password;
+                request.TitleId = JuiceboxEngine.Playfab.PlayfabManager.TitleId;
+                request.Username = username;
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTask();
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.OnRegisterPlayerComplete));
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.RegisterPlayFabUser(request, task.callback);
+
+                this.LoginTask = task;
+                return task;
+            },
+            OnRegisterPlayerComplete: function (task) {
+                if (task.Success) {
+                    this.LoggedIn = true;
+                    this.Username = task.Response.Username;
+                    this.PlayfabId = task.Response.PlayFabId;
+                }
+            },
+            /**
+             * Update the logged in user display name.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabIdentity
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @param   {string}                                displayName    The new display name.
+             * @return  {JuiceboxEngine.Playfab.PlayfabTask}
+             */
+            UpdateDisplayName: function (displayName) {
+                var request = { };
+                request.DisplayName = displayName;
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTask();
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.OnUpdateDisplayNameComplete));
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.UpdateUserTitleDisplayName(request, task.callback);
+                return task;
+            },
+            OnUpdateDisplayNameComplete: function (task) {
+                if (task.Success) {
+                    this.Username = task.Response.DisplayName;
+                }
+            },
+            /**
+             * Get the display name from a PlayfabID.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabIdentity
+             * @memberof JuiceboxEngine.Playfab.PlayfabIdentity
+             * @param   {string}                                playfabID    The Playfab ID to get the display name for.
+             * @return  {JuiceboxEngine.Playfab.PlayfabTask}
+             */
+            GetDisplayName: function (playfabID) {
+                var request = { };
+                request.PlayFabId = playfabID;
+
+                request.InfoRequestParameters = { };
+                request.InfoRequestParameters.GetUserAccountInfo = true;
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTask();
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.GetPlayerCombinedInfo(request, task.callback);
+                return task;
+            }
+        }
+    });
+
+    /**
+     * Playfab leaderboard management.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabLeaderboard
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabLeaderboard", {
+        ctors: {
+            /**
+             * Constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabLeaderboard
+             * @memberof JuiceboxEngine.Playfab.PlayfabLeaderboard
+             * @return  {void}
+             */
+            ctor: function () {
+                this.$initialize();
+
+            }
+        },
+        methods: {
+            SetLeaderboardEntry: function (leaderboardNames, values) {
+                var request = { };
+                request.Statistics = System.Array.init(leaderboardNames.length, null, System.Object);
+
+                for (var i = 0; i < leaderboardNames.length; i = (i + 1) | 0) {
+                    request.Statistics[i] = { };
+                    request.Statistics[i].StatisticName = leaderboardNames[i];
+                    request.Statistics[i].Value = values[i];
+                }
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTask();
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.UpdatePlayerStatistics(request, task.callback);
+
+                return task;
+            },
+            /**
+             * Start retrieving leaderboard data.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabLeaderboard
+             * @memberof JuiceboxEngine.Playfab.PlayfabLeaderboard
+             * @param   {string}                                           leaderboardName    The name of the statistic to get.
+             * @param   {number}                                           startPos           Position in the leaderboard to start listing from.
+             * @param   {number}                                           maxCount           Maximum amount of entries to retrieve. Maximum is 100.
+             * @return  {JuiceboxEngine.Playfab.PlayfabTaskLeaderboard}                       Leaderboard, with no entries. On
+             */
+            GetLeaderboard: function (leaderboardName, startPos, maxCount) {
+                var request = { };
+                request.MaxResultsCount = maxCount;
+                request.StartPosition = startPos;
+                request.StatisticName = leaderboardName;
+
+                var leaderboard = new JuiceboxEngine.Playfab.Leaderboard(leaderboardName, startPos, maxCount);
+
+                var task = new JuiceboxEngine.Playfab.PlayfabTaskLeaderboard(leaderboard);
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.OnGetLeaderboardComplete));
+
+                JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient.GetLeaderboard(request, task.callback);
+
+                return task;
+            },
+            OnGetLeaderboardComplete: function (task) {
+                var $t;
+                if (task.Success) {
+                    var leaderboardTask = H5.as(task, JuiceboxEngine.Playfab.PlayfabTaskLeaderboard);
+
+                    $t = H5.getEnumerator(task.Response.Leaderboard);
+                    try {
+                        while ($t.moveNext()) {
+                            var entry = H5.cast($t.Current, System.Object);
+                            var leaderboardEntry = new JuiceboxEngine.Playfab.LeaderboardEntry();
+                            leaderboardEntry.displayName = entry.DisplayName;
+                            leaderboardEntry.playfabId = entry.PlayFabId;
+                            leaderboardEntry.position = (entry.Position + 1) | 0;
+                            leaderboardEntry.value = entry.StatValue;
+
+                            leaderboardTask.Leaderboard.Entries.add(leaderboardEntry.$clone());
+                        }
+                    } finally {
+                        if (H5.is($t, System.IDisposable)) {
+                            $t.System$IDisposable$Dispose();
+                        }
+                    }
+
+                    if (task.Response.NextReset != null) {
+                        leaderboardTask.Leaderboard.NextReset = System.Convert.toDateTime(task.Response.NextReset);
+                        leaderboardTask.Leaderboard.WillReset = true;
+                    }
+                }
+            }
+        }
+    });
+
+    /**
+     * Playfab manager.
+     *
+     * @static
+     * @abstract
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabManager
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabManager", {
+        statics: {
+            fields: {
+                /**
+                 * Playfab title ID.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof JuiceboxEngine.Playfab.PlayfabManager
+                 * @type string
+                 */
+                TitleId: null,
+                /**
+                 * Playfab identity management.
+                 *
+                 * @static
+                 * @public
+                 * @memberof JuiceboxEngine.Playfab.PlayfabManager
+                 * @function Identity
+                 * @type JuiceboxEngine.Playfab.PlayfabIdentity
+                 */
+                Identity: null,
+                /**
+                 * Playfab title news.
+                 *
+                 * @static
+                 * @public
+                 * @memberof JuiceboxEngine.Playfab.PlayfabManager
+                 * @function TitleNews
+                 * @type JuiceboxEngine.Playfab.PlayfabTitleNews
+                 */
+                TitleNews: null,
+                /**
+                 * Playfab leaderboards.
+                 *
+                 * @static
+                 * @public
+                 * @memberof JuiceboxEngine.Playfab.PlayfabManager
+                 * @function Leaderboard
+                 * @type JuiceboxEngine.Playfab.PlayfabLeaderboard
+                 */
+                Leaderboard: null,
+                /**
+                 * Session ticket if logged in.
+                 *
+                 * @static
+                 * @memberof JuiceboxEngine.Playfab.PlayfabManager
+                 * @function SessionTicket
+                 * @type string
+                 */
+                SessionTicket: null,
+                PlayfabClient: null
+            },
+            ctors: {
+                ctor: function () {
+                    if (System.String.isNullOrEmpty(JuiceboxEngine.Util.Config.ConfigValues.PlayfabTitleID)) {
+                        System.Console.WriteLine("No valid PlayfabTitleID set in config.");
+                        return;
+                    }
+
+                    JuiceboxEngine.Playfab.PlayfabManager.TitleId = JuiceboxEngine.Util.Config.ConfigValues.PlayfabTitleID;
+                    window.PlayFab.settings.titleId = JuiceboxEngine.Playfab.PlayfabManager.TitleId;
+
+                    JuiceboxEngine.Playfab.PlayfabManager.PlayfabClient = window.PlayFabClientSDK;
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity = new JuiceboxEngine.Playfab.PlayfabIdentity();
+                    JuiceboxEngine.Playfab.PlayfabManager.TitleNews = new JuiceboxEngine.Playfab.PlayfabTitleNews();
+                    JuiceboxEngine.Playfab.PlayfabManager.Leaderboard = new JuiceboxEngine.Playfab.PlayfabLeaderboard();
+                }
+            }
+        }
+    });
+
+    /**
+     * @memberof JuiceboxEngine.Playfab
+     * @callback JuiceboxEngine.Playfab.PlayfabTask.TaskCompletedDelegate
+     * @param   {JuiceboxEngine.Playfab.PlayfabTask}    task
+     * @return  {void}
+     */
+
+    /**
+     * @memberof JuiceboxEngine.Playfab
+     * @callback JuiceboxEngine.Playfab.InternalPlayfabResponse
+     * @param   {object}    result    
+     * @param   {object}    error
+     * @return  {void}
+     */
+
+    /**
+     * Class managing async Playfab calls.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabTask
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabTask", {
+        fields: {
+            /**
+             * Indicates if the task has finished or not.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function Finished
+             * @type boolean
+             */
+            Finished: false,
+            /**
+             * Indicates if the task was successful.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function Success
+             * @type boolean
+             */
+            Success: false,
+            /**
+             * Response from PlayFab. If {@link } is false, it will be the error body.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function Response
+             * @type object
+             */
+            Response: null,
+            /**
+             * Error message if available.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function ErrorMessage
+             * @type string
+             */
+            ErrorMessage: null,
+            /**
+             * Callback for this task.
+             *
+             * @instance
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @type JuiceboxEngine.Playfab.InternalPlayfabResponse
+             */
+            callback: null
+        },
+        events: {
+            /**
+             * Task completed event.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTask
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function addOnTaskCompleted
+             * @param   {JuiceboxEngine.Playfab.PlayfabTask.TaskCompletedDelegate}    value
+             * @return  {void}
+             */
+            /**
+             * Task completed event.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTask
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @function removeOnTaskCompleted
+             * @param   {JuiceboxEngine.Playfab.PlayfabTask.TaskCompletedDelegate}    value
+             * @return  {void}
+             */
+            OnTaskCompleted: null
+        },
+        ctors: {
+            /**
+             * Constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTask
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @return  {void}
+             */
+            ctor: function () {
+                this.$initialize();
+                this.Finished = false;
+                this.Success = false;
+                this.callback = H5.fn.cacheBind(this, this.TaskFinished);
+            }
+        },
+        methods: {
+            TaskFinished: function (response, error) {
+                if (error == null) {
+                    this.Response = response.data;
+                    this.FinishTask(true);
+                } else {
+                    this.Response = error;
+                    this.ErrorMessage = error.errorMessage;
+                    this.FinishTask(false);
+                }
+            },
+            /**
+             * Finish task.
+             *
+             * @instance
+             * @this JuiceboxEngine.Playfab.PlayfabTask
+             * @memberof JuiceboxEngine.Playfab.PlayfabTask
+             * @param   {boolean}    success    Did the task succeed?
+             * @return  {void}
+             */
+            FinishTask: function (success) {
+                this.Finished = true;
+                this.Success = success;
+
+                !H5.staticEquals(this.OnTaskCompleted, null) ? this.OnTaskCompleted(this) : null;
+            }
+        }
+    });
+
+    /**
+     * @memberof JuiceboxEngine.Playfab
+     * @callback JuiceboxEngine.Playfab.OnPlayfabResponse
+     * @param   {boolean}    success     
+     * @param   {object}     response    
+     * @param   {string}     error
+     * @return  {void}
+     */
+
+    /**
+     * Retrieves title news.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabTitleNews
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabTitleNews", {
+        fields: {
+            /**
+             * Indicates if news has been downloaded before.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @function Downloaded
+             * @type boolean
+             */
+            Downloaded: false,
+            NewsItems: null
+        },
+        events: {
+            /**
+             * Called on {@link } response.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @memberof JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @function addOnGetTitleNews
+             * @param   {JuiceboxEngine.Playfab.OnPlayfabResponse}    value
+             * @return  {void}
+             */
+            /**
+             * Called on {@link } response.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @memberof JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @function removeOnGetTitleNews
+             * @param   {JuiceboxEngine.Playfab.OnPlayfabResponse}    value
+             * @return  {void}
+             */
+            OnGetTitleNews: null
+        },
+        ctors: {
+            /**
+             * Title news constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @memberof JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @return  {void}
+             */
+            ctor: function () {
+                this.$initialize();
+                this.Downloaded = false;
+                this.NewsItems = new (System.Collections.Generic.List$1(JuiceboxEngine.Playfab.NewsItem)).ctor();
+            }
+        },
+        methods: {
+            /**
+             * Download title news.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @memberof JuiceboxEngine.Playfab.PlayfabTitleNews
+             * @param   {number}    count    Amount of news items.
+             * @return  {void}
+             */
+            GetTitleNews: function (count) {
+                var request = { };
+                request.Count = count;
+
+                var callback = H5.fn.cacheBind(this, this.OnGetTitleNewsComplete);
+                window.PlayFabClientSDK.GetTitleNews(request, callback);
+            },
+            OnGetTitleNewsComplete: function (result, error) {
+                var $t;
+                if (error != null) {
+                    !H5.staticEquals(this.OnGetTitleNews, null) ? this.OnGetTitleNews(false, error, error.errorDetails) : null;
+                    return;
+                }
+
+                this.NewsItems = new (System.Collections.Generic.List$1(JuiceboxEngine.Playfab.NewsItem)).ctor();
+
+                $t = H5.getEnumerator(result.data.News);
+                try {
+                    while ($t.moveNext()) {
+                        var item = H5.cast($t.Current, System.Object);
+                        this.NewsItems.add(new JuiceboxEngine.Playfab.NewsItem(item));
+                    }
+                } finally {
+                    if (H5.is($t, System.IDisposable)) {
+                        $t.System$IDisposable$Dispose();
+                    }
+                }
+
+                !H5.staticEquals(this.OnGetTitleNews, null) ? this.OnGetTitleNews(true, result, null) : null;
+                this.Downloaded = true;
+            }
+        }
+    });
+
     H5.define("JuiceboxEngine.Resources.Preloader", {
         fields: {
             _resources: null,
@@ -12438,7 +13340,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     this._id = this._clip.Play();
                     this._hasID = true;
                 } else {
-                    this._clip.Play();
+                    this._clip.Play$1(this._id);
                 }
             },
             /**
@@ -14980,6 +15882,46 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              */
             Unique: function () {
                 return true;
+            }
+        }
+    });
+
+    /**
+     * Task for leaderboard data.
+     *
+     * @public
+     * @class JuiceboxEngine.Playfab.PlayfabTaskLeaderboard
+     * @augments JuiceboxEngine.Playfab.PlayfabTask
+     */
+    H5.define("JuiceboxEngine.Playfab.PlayfabTaskLeaderboard", {
+        inherits: [JuiceboxEngine.Playfab.PlayfabTask],
+        fields: {
+            /**
+             * The leaderboard. Only has data when task has finished.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Playfab.PlayfabTaskLeaderboard
+             * @function Leaderboard
+             * @type JuiceboxEngine.Playfab.Leaderboard
+             */
+            Leaderboard: null
+        },
+        ctors: {
+            /**
+             * Leaderboard task constructor.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Playfab.PlayfabTaskLeaderboard
+             * @memberof JuiceboxEngine.Playfab.PlayfabTaskLeaderboard
+             * @param   {JuiceboxEngine.Playfab.Leaderboard}    leaderboard    Leaderboard to write to.
+             * @return  {void}
+             */
+            ctor: function (leaderboard) {
+                this.$initialize();
+                JuiceboxEngine.Playfab.PlayfabTask.ctor.call(this);
+                this.Leaderboard = leaderboard;
             }
         }
     });

@@ -37,8 +37,113 @@ H5.assembly("LD48", function ($asm, globals) {
             desc: null,
             name: null,
             price: System.UInt64(0),
+            unlockPrice: System.UInt64(0),
             debtPerSecond: System.UInt64(0),
             owned: System.UInt64(0)
+        }
+    });
+
+    H5.define("LD48.MainMenu", {
+        inherits: [JuiceboxEngine.Scene],
+        fields: {
+            _defaultZoom: 0,
+            _title: null,
+            _background: null,
+            _loginID: null
+        },
+        ctors: {
+            ctor: function (manager) {
+                this.$initialize();
+                JuiceboxEngine.Scene.ctor.call(this, manager);
+                JuiceboxEngine.Graphics.GraphicsManager.Instance.addOnResize(H5.fn.bind(this, function (x, y) {
+                    this.ScaleGame();
+                }));
+            }
+        },
+        methods: {
+            ScaleGame: function () {
+                if (JuiceboxEngine.Util.Browser.IsMobile()) {
+                    this._defaultZoom = 1;
+                    return;
+                }
+
+                this._defaultZoom = JuiceboxEngine.Graphics.GraphicsManager.Instance.Height < 1000 ? 1 : 2;
+                this.DefaultCamera.Zoom = this._defaultZoom;
+            },
+            Login: function () {
+                this._loginID = JuiceboxEngine.Util.LocalStorage.GetValue("login_id");
+
+                if (this._loginID == null) {
+                    this._loginID = System.Guid.NewGuid().toString();
+
+                    System.Console.WriteLine("Registering with Playfab...");
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginWithCustomID(this._loginID, true);
+                } else {
+                    System.Console.WriteLine("Logging in with Playfab...");
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginWithCustomID(this._loginID, false);
+                }
+                JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.LoginFinished));
+            },
+            LoginFinished: function (task) {
+                if (task.Success) {
+                    JuiceboxEngine.Util.LocalStorage.StoreValue("login_id", this._loginID);
+                    System.Console.WriteLine(System.String.format("Logged in with Playfab! {0}", [JuiceboxEngine.Playfab.PlayfabManager.Identity.Username]));
+                } else {
+                    System.Console.WriteLine("Failed to log in with Playfab.");
+                }
+            },
+            InitializeScene: function () {
+                this.Login();
+                this.ScaleGame();
+
+                this._background = this.AddGameObject$1("Background");
+                var map = this._background.AddComponent(JuiceboxEngine.TileMap);
+                map.TileSize = 16;
+                map.MapData = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/backgroundData.png");
+                map.MapData.Wrap = JuiceboxEngine.Graphics.Texture2D.WrapMode.Repeat;
+                map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/background.png");
+
+                this._title = this.AddGameObject$1("Title");
+                this._title.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 64);
+                var titleSprite = this._title.AddComponent(JuiceboxEngine.Sprite);
+                titleSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Title.png");
+                titleSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-titleSprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-titleSprite.Texture.Height) | 0), 2)) | 0));
+            },
+            PreUpdate: function () {
+                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
+
+                this._title.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
+
+                if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyReleased(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                    if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
+                        var username = JuiceboxEngine.Util.Browser.Prompt("User name plx", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+
+                        if (username == null) {
+                            this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                        }
+
+                        var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+                        task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+                    } else {
+                        this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                    }
+                }
+            },
+            UpdateUsername: function (task) {
+                if (task.Success) {
+                    this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                } else {
+                    var username = JuiceboxEngine.Util.Browser.Prompt("Something went wrong. " + (task.ErrorMessage || ""), System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+                    var newTask = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+                    newTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+                }
+            },
+            LateUpdate: function () {
+
+            },
+            FinalizeScene: function () {
+
+            }
         }
     });
 
@@ -54,8 +159,8 @@ H5.assembly("LD48", function ($asm, globals) {
             ctors: {
                 init: function () {
                     this.BPM = 132;
-                    this.GAME_TIME = 150;
-                    this.KICK_IN_BPM_EFFECT = 16;
+                    this.GAME_TIME = 160;
+                    this.KICK_IN_BPM_EFFECT = 14.5;
                     this.MAX_WEBSITES = 2;
                 }
             }
@@ -83,13 +188,14 @@ H5.assembly("LD48", function ($asm, globals) {
             _fps: null,
             _defaultZoom: 0,
             _popupEnabledThisFrame: false,
+            _finished: false,
             FixedCharges: null,
             _fixedChargesGenerated: null
         },
         ctors: {
             init: function () {
                 var $t;
-                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "PLACEHOLDER", $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(98), $t.desc = "Unlimited power!", $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2027), $t.desc = "Money goes vrooom.", $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(247923), $t.debtPerSecond = System.UInt64(12236), $t.desc = "ANOTHER!", $t)], LD48.FixedCharge);
+                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "PLACEHOLDER", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(98), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "ANOTHER!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
             },
             ctor: function (manager) {
                 this.$initialize();
@@ -97,6 +203,7 @@ H5.assembly("LD48", function ($asm, globals) {
                 this.debt = System.UInt64(0);
                 this.debtPerSecond = System.UInt64(0);
                 this._timeLeft = LD48.MainScene.GAME_TIME;
+                this._finished = false;
 
                 JuiceboxEngine.Graphics.GraphicsManager.Instance.addOnResize(H5.fn.bind(this, function (x, y) {
                     this.ScaleGame();
@@ -134,7 +241,6 @@ H5.assembly("LD48", function ($asm, globals) {
                 var music = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
                 music.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/main.mp3"));
                 music.Play();
-                music.Loop(true);
 
                 this._website = this.AddGameObject$1("website");
                 this._websiteSprite = this._website.AddComponent(JuiceboxEngine.Sprite);
@@ -211,6 +317,8 @@ H5.assembly("LD48", function ($asm, globals) {
                     var fixedCharge = { v : this.FixedCharges[i] };
 
                     var charge = { v : this.AddGameObject$1(System.String.format("Fixed charge {0}", [i])) };
+                    charge.v.Enabled = false;
+
                     this._fixedCharges[i] = charge.v;
 
                     charge.v.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, ((-80 - H5.Int.mul(i, 20)) | 0), 0.25);
@@ -227,7 +335,7 @@ H5.assembly("LD48", function ($asm, globals) {
                     var chargeText = { v : charge.v.AddComponent(JuiceboxEngine.TextComponent) };
                     chargeText.v.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-60, -9);
                     chargeText.v.Color = JuiceboxEngine.Math.Color.Black.$clone();
-                    chargeText.v.DisplayText = System.String.format("{0} {1}", fixedCharge.v.name, this.GetDisplayStringSmall(fixedCharge.v.price));
+                    chargeText.v.DisplayText = System.String.format("???? {0}", [this.GetDisplayStringSmall(fixedCharge.v.price)]);
 
                     var chargeDebtText = charge.v.AddComponent(JuiceboxEngine.TextComponent);
                     chargeDebtText.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(22, -9);
@@ -239,7 +347,6 @@ H5.assembly("LD48", function ($asm, globals) {
 
                     var audio = { v : charge.v.AddComponent(JuiceboxEngine.Audio.AudioComponent) };
                     audio.v.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/ka-ching.mp3"));
-                    audio.v.SetVolume(0.5);
 
                     chargeHit.addOnMouseEnter((function ($me, charge, chargeSprite) {
                         return H5.fn.bind($me, function (ev) {
@@ -286,7 +393,10 @@ H5.assembly("LD48", function ($asm, globals) {
                                 fixedCharge.v.owned = fixedCharge.v.owned.inc();
                                 fixedCharge.v.price = H5.Int.clipu64(System.Int64.toNumber(fixedCharge.v.price) * JuiceboxEngine.Math.JMath.Pow(1.15, System.Int64.toNumber(fixedCharge.v.owned)));
                                 chargeText.v.DisplayText = System.String.format("{0} {1}", fixedCharge.v.name, this.GetDisplayStringSmall(fixedCharge.v.price));
+
+                                audio.v.Stop();
                                 audio.v.Play();
+                                audio.v.SetVolume(0.2);
                             }
 
                             JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, function (x) {
@@ -328,13 +438,16 @@ H5.assembly("LD48", function ($asm, globals) {
                 })));
             },
             WebsiteClick: function (ev) {
-                this.AddDebt(System.UInt64(1));
                 this.WebsiteEnter(null);
 
-                var pos = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
-                this.BurstDollars(1, pos.$clone());
+                if (!this._finished) {
+                    this.AddDebt(System.UInt64(1));
 
-                this._websiteSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, System.String.format("Textures/Website{0}.png", [JuiceboxEngine.Util.Random.NextRange(0, LD48.MainScene.MAX_WEBSITES)]));
+                    var pos = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
+                    this.BurstDollars(1, pos.$clone());
+
+                    this._websiteSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, System.String.format("Textures/Website{0}.png", [JuiceboxEngine.Util.Random.NextRange(0, LD48.MainScene.MAX_WEBSITES)]));
+                }
             },
             BurstDollars: function (amount, position) {
                 this._websiteParticles.Parent.Transform.Position2D = position.$clone();
@@ -342,27 +455,33 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 this._websiteParticles.Burst();
             },
-            AddDebt: function (debt) {
-                if (debt.equals(System.UInt64(0))) {
+            AddDebt: function (debtAdded) {
+                if (debtAdded.equals(System.UInt64(0))) {
                     return;
                 }
 
                 var debtBefore = this.debt;
-                var debtTarget = this.debt.add(debt);
+                var debtTarget = this.debt.add(debtAdded);
 
-                this.debt = this.debt.add(debt);
+                this.debt = this.debt.add(debtAdded);
 
-                if (debt.equals(System.UInt64(1))) {
+                if (debtAdded.equals(System.UInt64(1))) {
                     this._shownDebt = this.debt;
                 }
 
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, H5.fn.bind(this, function (x) {
                     this._debtCounter.Transform.Scale = JuiceboxEngine.Math.Vector3.op_Multiply$1(new JuiceboxEngine.Math.Vector3.$ctor2(1, 1, 1), (1 + JuiceboxEngine.Math.Easings.QuadraticEaseOut(1.0 - x) / 4.0));
 
-                    if (debt.ne(System.UInt64(1))) {
+                    if (debtAdded.ne(System.UInt64(1))) {
                         this._shownDebt = H5.Int.clipu64(JuiceboxEngine.Math.JMath.Interpolate(System.Int64.toNumber(debtBefore), System.Int64.toNumber(debtTarget), x));
                     }
                 })));
+
+                for (var i = 0; i < this.FixedCharges.length; i = (i + 1) | 0) {
+                    if (!this._fixedCharges[i].Enabled) {
+                        this._fixedCharges[i].Enabled = this.debt.gte(this.FixedCharges[i].unlockPrice);
+                    }
+                }
             },
             /**
              * Convert a number to a presentable string.
@@ -391,48 +510,73 @@ H5.assembly("LD48", function ($asm, globals) {
                 return System.String.format("${0}", [LD48.Extensions.KiloFormat(value)]);
             },
             PreUpdate: function () {
-                this._fps.DisplayText = System.String.format("frame time: {0}ms ({1} fps)", JuiceboxEngine.Util.Time.DeltaTimeRealTime * 1000, JuiceboxEngine.Math.JMath.Round(1.0 / JuiceboxEngine.Util.Time.DeltaTimeRealTime));
+                if (this._timeLeft < 0) {
+                    if (!this._finished) {
+                        this._finished = true;
+                        this._timer.Enabled = false;
 
-                if (LD48.MainScene.GAME_TIME - this._timeLeft > LD48.MainScene.KICK_IN_BPM_EFFECT) {
-                    this.DefaultCamera.Zoom = this._defaultZoom + JuiceboxEngine.Math.JMath.Clamp$1(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.TWO_PI * (2)), 0, 1) * 0.025;
-                }
+                        JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["Highscore", "TotalScore", "Attempts"], System.String), System.Array.init([System.Int64.clip32(this.debt), System.Int64.clip32(this.debt), 1], System.Int32));
 
-                this._debtTimer += JuiceboxEngine.Util.Time.DeltaTime;
-                this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTime;
+                        for (var i = 0; i < this._fixedCharges.length; i = (i + 1) | 0) {
+                            this._fixedCharges[i].GetComponent(JuiceboxEngine.UIComponent).Enabled = false;
+                        }
 
-                var span = System.TimeSpan.fromSeconds(this._timeLeft);
-                this._timerText.DisplayText = System.String.format("{0}:{1} remaining", span.getMinutes(), System.String.alignString(H5.toString(span.getSeconds()), 2, 48));
+                        this._websiteSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/WebsiteBlocked.png");
 
-                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
+                        var start = this.DefaultCamera.Parent.Transform.Position2D.$clone();
 
-                if (this._debtTimer >= 1.0) {
-                    this.AddDebt(this.debtPerSecond);
-                    this.BurstDollars(this.debtPerSecond.equals(System.UInt64(0)) ? 0 : ((((H5.Int.div(System.Int64.clip32(this.debtPerSecond), 5)) | 0) + 1) | 0), this._debtPerSecondCounter.Transform.Position2D.$clone());
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(1.0, H5.fn.bind(this, function (x) {
+                            this.DefaultCamera.Parent.Transform.Position2D = JuiceboxEngine.Math.Vector2.Interpolate(start.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, 0), x);
 
-                    this._debtTimer = 0;
+                            for (var i1 = 0; i1 < this._fixedCharges.length; i1 = (i1 + 1) | 0) {
+                                this._fixedCharges[i1].Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(this._fixedCharges[i1].Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, -128 * x));
+                            }
+                        })));
+                    }
+                } else {
+                    this._fps.DisplayText = System.String.format("frame time: {0}ms ({1} fps)", JuiceboxEngine.Util.Time.DeltaTimeRealTime * 1000, JuiceboxEngine.Math.JMath.Round(1.0 / JuiceboxEngine.Util.Time.DeltaTimeRealTime));
 
-                    for (var i = 0; i < this._fixedCharges.length; i = (i + 1) | 0) {
-                        this._fixedChargesGenerated[i] = this._fixedChargesGenerated[i].add((this.FixedCharges[i].debtPerSecond.mul(this.FixedCharges[i].owned)));
+                    if (LD48.MainScene.GAME_TIME - this._timeLeft > LD48.MainScene.KICK_IN_BPM_EFFECT) {
+                        this.DefaultCamera.Zoom = this._defaultZoom + JuiceboxEngine.Math.JMath.Clamp$1(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.TWO_PI * (2)), 0, 1) * 0.025;
+                    }
+
+                    this._debtTimer += JuiceboxEngine.Util.Time.DeltaTime;
+                    this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTime;
+
+                    var span = System.TimeSpan.fromSeconds(this._timeLeft);
+                    this._timerText.DisplayText = System.String.format("{0}:{1} remaining", span.getMinutes(), System.String.alignString(H5.toString(span.getSeconds()), 2, 48));
+
+                    if (this._debtTimer >= 1.0) {
+                        this.AddDebt(this.debtPerSecond);
+                        this.BurstDollars(this.debtPerSecond.equals(System.UInt64(0)) ? 0 : ((((H5.Int.div(System.Int64.clip32(this.debtPerSecond), 5)) | 0) + 1) | 0), this._debtPerSecondCounter.Transform.Position2D.$clone());
+
+                        this._debtTimer = 0;
+
+                        for (var i1 = 0; i1 < this._fixedCharges.length; i1 = (i1 + 1) | 0) {
+                            this._fixedChargesGenerated[i1] = this._fixedChargesGenerated[i1].add((this.FixedCharges[i1].debtPerSecond.mul(this.FixedCharges[i1].owned)));
+                        }
+                    }
+
+                    this._debtText.DisplayText = "Debt " + (this.GetDisplayString(this._shownDebt) || "");
+                    this._debtTextShadow.DisplayText = this._debtText.DisplayText;
+
+                    this._debtPerSecondText.DisplayText = System.String.format("${0}/s", [this.debtPerSecond]);
+                    this._debtPerSecondTextShadow.DisplayText = this._debtPerSecondText.DisplayText;
+
+                    for (var i2 = 0; i2 < this._fixedCharges.length; i2 = (i2 + 1) | 0) {
+                        if (this.debt.gte(this.FixedCharges[i2].price)) {
+                            this._fixedCharges[i2].GetComponent(JuiceboxEngine.Sprite).Color = JuiceboxEngine.Math.Color.White.$clone();
+                        } else {
+                            this._fixedCharges[i2].GetComponent(JuiceboxEngine.Sprite).Color = new JuiceboxEngine.Math.Color.$ctor3(0.5, 0.5, 0.5, 1.0);
+                        }
+
+                        this._fixedCharges[i2].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i2) * (0.049087387);
                     }
                 }
-
-                this._debtText.DisplayText = "Debt " + (this.GetDisplayString(this._shownDebt) || "");
-                this._debtTextShadow.DisplayText = this._debtText.DisplayText;
-
-                this._debtPerSecondText.DisplayText = System.String.format("${0}/s", [this.debtPerSecond]);
-                this._debtPerSecondTextShadow.DisplayText = this._debtPerSecondText.DisplayText;
 
                 this._website.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
 
-                for (var i1 = 0; i1 < this._fixedCharges.length; i1 = (i1 + 1) | 0) {
-                    if (this.debt.gte(this.FixedCharges[i1].price)) {
-                        this._fixedCharges[i1].GetComponent(JuiceboxEngine.Sprite).Color = JuiceboxEngine.Math.Color.White.$clone();
-                    } else {
-                        this._fixedCharges[i1].GetComponent(JuiceboxEngine.Sprite).Color = new JuiceboxEngine.Math.Color.$ctor3(0.5, 0.5, 0.5, 1.0);
-                    }
-
-                    this._fixedCharges[i1].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i1) * (0.049087387);
-                }
+                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
             },
             LateUpdate: function () {
                 this._popupEnabledThisFrame = false;
@@ -446,7 +590,10 @@ H5.assembly("LD48", function ($asm, globals) {
     H5.define("LD48.Program", {
         main: function Main (args) {
             var game = new JuiceboxEngine.JuiceboxGame();
-            game.Run(new LD48.MainScene(game.ResourceManager));
+
+            game.AudioManager.SetVolume(0.5);
+
+            game.Run(new LD48.MainMenu(game.ResourceManager));
         }
     });
 });
