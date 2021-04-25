@@ -91,6 +91,8 @@ H5.assembly("LD48", function ($asm, globals) {
                 } else {
                     System.Console.WriteLine("Failed to log in with Playfab.");
                 }
+
+                this.ShowLeaderboard();
             },
             InitializeScene: function () {
                 this.Login();
@@ -109,14 +111,76 @@ H5.assembly("LD48", function ($asm, globals) {
                 titleSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Title.png");
                 titleSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-titleSprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-titleSprite.Texture.Height) | 0), 2)) | 0));
             },
+            ShowLeaderboard: function () {
+                var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard("Highscore", 0, 100);
+
+                task.addOnTaskCompleted(H5.fn.bind(this, function (lbTask) {
+                    if (lbTask.Success) {
+                        var leaderboardTask = H5.cast(lbTask, JuiceboxEngine.Playfab.PlayfabTaskLeaderboard);
+                        var leaderboard = leaderboardTask.Leaderboard;
+
+                        var entries = System.Array.init(leaderboard.Entries.Count, null, JuiceboxEngine.GameObject);
+
+                        for (var i = 0; i < leaderboard.Entries.Count; i = (i + 1) | 0) {
+                            var entry = leaderboard.Entries.getItem(i).$clone();
+
+                            var lbEntryObj = this.AddGameObject$1(System.String.format("Entry{0}", [i]));
+                            entries[i] = lbEntryObj;
+
+                            lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
+
+                            var entrySprite = lbEntryObj.AddComponent(JuiceboxEngine.Sprite);
+                            entrySprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
+
+                            entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 40, 128, 18);
+
+                            if (i === 0) {
+                                entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 58, 128, 18);
+                            } else {
+                                if (i === 1) {
+                                    entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 76, 128, 18);
+                                } else {
+                                    if (i === 2) {
+                                        entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 94, 128, 18);
+                                    }
+                                }
+                            }
+
+                            entrySprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-entrySprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-entrySprite.Texture.Height) | 0), 2)) | 0));
+
+                            var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
+                            text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
+                            text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, entry.value);
+                            text.Color = JuiceboxEngine.Math.Color.Black.$clone();
+                        }
+
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.LinearRepeat(1.0, function (x) {
+                            for (var i1 = 0; i1 < entries.length; i1 = (i1 + 1) | 0) {
+                                entries[i1].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i1) * (0.049087387);
+                            }
+                        }));
+                    } else {
+                        System.Console.WriteLine("Failed to get leaderboards... :(");
+                    }
+                }));
+            },
             PreUpdate: function () {
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
+
+                if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                    this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize));
+                }
+
+                if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
+                    this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
+                }
 
                 this._title.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
 
                 if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyReleased(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
                     if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
-                        var username = JuiceboxEngine.Util.Browser.Prompt("User name plx", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+                        var username = JuiceboxEngine.Util.Browser.Prompt("Leaderboard user name:", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
 
                         if (username == null) {
                             this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
@@ -509,13 +573,79 @@ H5.assembly("LD48", function ($asm, globals) {
             GetDisplayStringSmall: function (value) {
                 return System.String.format("${0}", [LD48.Extensions.KiloFormat(value)]);
             },
+            ShowLeaderboard: function () {
+                var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard("Highscore", 0, 100);
+
+                task.addOnTaskCompleted(H5.fn.bind(this, function (lbTask) {
+                    if (lbTask.Success) {
+                        var leaderboardTask = H5.cast(lbTask, JuiceboxEngine.Playfab.PlayfabTaskLeaderboard);
+                        var leaderboard = leaderboardTask.Leaderboard;
+
+                        var entries = System.Array.init(leaderboard.Entries.Count, null, JuiceboxEngine.GameObject);
+
+                        for (var i = 0; i < leaderboard.Entries.Count; i = (i + 1) | 0) {
+                            var entry = leaderboard.Entries.getItem(i).$clone();
+
+                            var lbEntryObj = this.AddGameObject$1(System.String.format("Entry{0}", [i]));
+                            entries[i] = lbEntryObj;
+
+                            lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
+
+                            var entrySprite = lbEntryObj.AddComponent(JuiceboxEngine.Sprite);
+                            entrySprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
+
+                            entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 40, 128, 18);
+
+                            if (i === 0) {
+                                entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 58, 128, 18);
+                            } else {
+                                if (i === 1) {
+                                    entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 76, 128, 18);
+                                } else {
+                                    if (i === 2) {
+                                        entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 94, 128, 18);
+                                    }
+                                }
+                            }
+
+                            entrySprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-entrySprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-entrySprite.Texture.Height) | 0), 2)) | 0));
+
+                            var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
+                            text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
+                            text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, entry.value);
+                            text.Color = JuiceboxEngine.Math.Color.Black.$clone();
+                        }
+
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.LinearRepeat(1.0, function (x) {
+                            for (var i1 = 0; i1 < entries.length; i1 = (i1 + 1) | 0) {
+                                entries[i1].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i1) * (0.049087387);
+                            }
+                        }));
+                    } else {
+                        System.Console.WriteLine("Failed to get leaderboards... :(");
+                    }
+                }));
+            },
             PreUpdate: function () {
                 if (this._timeLeft < 0) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                        this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom));
+                    }
+
+                    if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
+                        this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
+                    }
+
                     if (!this._finished) {
                         this._finished = true;
                         this._timer.Enabled = false;
 
-                        JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["Highscore", "TotalScore", "Attempts"], System.String), System.Array.init([System.Int64.clip32(this.debt), System.Int64.clip32(this.debt), 1], System.Int32));
+                        var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["Highscore", "TotalScore", "Attempts"], System.String), System.Array.init([System.Int64.clip32(this.debt), System.Int64.clip32(this.debt), 1], System.Int32));
+                        task.addOnTaskCompleted(H5.fn.bind(this, function (x) {
+                            this.ShowLeaderboard();
+                        }));
+
 
                         for (var i = 0; i < this._fixedCharges.length; i = (i + 1) | 0) {
                             this._fixedCharges[i].GetComponent(JuiceboxEngine.UIComponent).Enabled = false;

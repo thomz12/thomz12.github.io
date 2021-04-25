@@ -1,4 +1,5 @@
 Textures/Title.png
+Textures/buttons.png
 Textures/Website.png
 Textures/WebsiteBlocked.png
 Textures/Website0.png
