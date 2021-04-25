@@ -17,8 +17,4 @@ Fonts/8-bit.bff
 Sounds/ka-ching.mp3
 Sounds/main.mp3
 Sounds/menu.mp3
-Sounds/plong_1.mp3
-Sounds/plong_2.mp3
-Sounds/plong_3.mp3
-Sounds/plong_4.mp3
-Sounds/plong_5.mp3
+Sounds/buy.mp3
