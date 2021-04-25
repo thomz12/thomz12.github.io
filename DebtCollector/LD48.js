@@ -122,6 +122,7 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._audio = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
                 this._audio.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/menu.mp3"));
                 this._audio.Play();
+                this._audio.Loop(true);
 
                 this._title = this.AddGameObject$1("Title");
                 this._title.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 64);
@@ -204,6 +205,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             entrySprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
 
                             entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 40, 128, 18);
+                            entrySprite.Priority = 0.1;
 
                             if (i === 0) {
                                 entrySprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 58, 128, 18);
