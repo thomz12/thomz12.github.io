@@ -222,7 +222,14 @@ H5.assembly("LD48", function ($asm, globals) {
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
-                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
+
+                            var name = entry.displayName;
+                            if (name.length > 12) {
+                                name = name.substr(0, 10);
+                                name = (name || "") + "..";
+                            }
+
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, name, System.Int32.format(entry.value, "#,##"));
                             text.Color = JuiceboxEngine.Math.Color.Black.$clone();
                         }
 
@@ -770,7 +777,7 @@ H5.assembly("LD48", function ($asm, globals) {
 
                         var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["Highscore", "TotalScore", "Attempts"], System.String), System.Array.init([System.Int64.clip32(this.debt), System.Int64.clip32(this.debt), 1], System.Int32));
                         task.addOnTaskCompleted(H5.fn.bind(this, function (x) {
-                            this.ShowLeaderboard();
+                            JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ShowLeaderboards());
                         }));
 
 
@@ -791,8 +798,6 @@ H5.assembly("LD48", function ($asm, globals) {
                         })));
                     }
                 } else {
-                    this._fps.DisplayText = System.String.format("frame time: {0}ms ({1} fps)", JuiceboxEngine.Util.Time.DeltaTimeRealTime * 1000, JuiceboxEngine.Math.JMath.Round(1.0 / JuiceboxEngine.Util.Time.DeltaTimeRealTime));
-
                     if (LD48.MainScene.GAME_TIME - this._timeLeft > LD48.MainScene.KICK_IN_BPM_EFFECT) {
                         this.DefaultCamera.Zoom = this._defaultZoom + JuiceboxEngine.Math.JMath.Clamp$1(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.TWO_PI * (2)), 0, 1) * 0.025;
                     }
@@ -836,6 +841,37 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._exit.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + 2) * (0.09817477);
 
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
+            },
+            ShowLeaderboards: function () {
+                var $step = 0,
+                    $jumpFromFinally,
+                    $returnValue,
+                    $async_e;
+
+                var $enumerator = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($step) {
+                                case 0: {
+                                    $enumerator.current = new JuiceboxEngine.Coroutines.WaitForSeconds(2.0);
+                                        $step = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    this.ShowLeaderboard();
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($async_e1) {
+                        $async_e = System.Exception.create($async_e1);
+                        throw $async_e;
+                    }
+                }));
+                return $enumerator;
             },
             LateUpdate: function () {
                 this._popupEnabledThisFrame = false;
