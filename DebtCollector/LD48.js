@@ -224,7 +224,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
 
                             var name = entry.displayName;
-                            if (name.length > 12) {
+                            if (name != null && name.length > 12) {
                                 name = name.substr(0, 10);
                                 name = (name || "") + "..";
                             }
