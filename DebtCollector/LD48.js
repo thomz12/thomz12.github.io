@@ -587,7 +587,7 @@ H5.assembly("LD48", function ($asm, globals) {
                 }));
 
                 this._exit = this.AddGameObject$1("Exit");
-                this._exit.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 96);
+                this._exit.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 108);
 
                 this._exit.AddComponent(JuiceboxEngine.UIComponent).Setup(startelement, this);
 
@@ -738,16 +738,20 @@ H5.assembly("LD48", function ($asm, globals) {
             },
             PreUpdate: function () {
                 if (this._timeLeft < 0) {
-                    if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
-                        this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize));
-                    }
+                    this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTimeRealTime;
 
-                    if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
-                        this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
-                    }
+                    if (this._timeLeft < -1) {
+                        if (JuiceboxEngine.Input.InputManager.Instance.MouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                            this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize));
+                        }
 
-                    if (this.DefaultCamera.Parent.Transform.Position2D.Y < this._lowestScroll) {
-                        this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, this._lowestScroll);
+                        if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
+                            this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
+                        }
+
+                        if (this.DefaultCamera.Parent.Transform.Position2D.Y < this._lowestScroll) {
+                            this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, this._lowestScroll);
+                        }
                     }
 
                     if (!this._finished) {
@@ -786,7 +790,7 @@ H5.assembly("LD48", function ($asm, globals) {
                     }
 
                     this._debtTimer += JuiceboxEngine.Util.Time.DeltaTime;
-                    this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTime;
+                    this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTimeRealTime;
 
                     var span = System.TimeSpan.fromSeconds(this._timeLeft);
                     this._timerText.DisplayText = System.String.format("{0}:{1} remaining", span.getMinutes(), System.String.alignString(H5.toString(span.getSeconds()), 2, 48));
