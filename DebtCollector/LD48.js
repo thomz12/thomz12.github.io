@@ -395,6 +395,8 @@ H5.assembly("LD48", function ($asm, globals) {
                 websiteHit.addOnMouseEnter(H5.fn.cacheBind(this, this.WebsiteEnter));
                 websiteHit.addOnMouseExit(H5.fn.cacheBind(this, this.WebsiteExit));
 
+                this._website.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+
                 var websiteUI = this._website.AddComponent(JuiceboxEngine.UIComponent);
                 websiteUI.Setup(websiteHit, this);
 
@@ -610,6 +612,12 @@ H5.assembly("LD48", function ($asm, globals) {
             },
             WebsiteClick: function (ev) {
                 this.WebsiteEnter(null);
+
+                var audio = this._website.GetComponent(JuiceboxEngine.Audio.AudioComponent);
+
+                audio.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/plong_{0}.mp3", [JuiceboxEngine.Util.Random.NextRange(0, 6)])));
+                audio.Play(true);
+                audio.SetVolume(1.0);
 
                 if (!this._finished) {
                     this.AddDebt(System.UInt64(1));

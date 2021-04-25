@@ -13339,14 +13339,16 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @public
              * @this JuiceboxEngine.Audio.AudioComponent
              * @memberof JuiceboxEngine.Audio.AudioComponent
+             * @param   {boolean}    newID
              * @return  {void}
              */
-            Play: function () {
+            Play: function (newID) {
+                if (newID === void 0) { newID = false; }
                 if (this._clip == null) {
                     return;
                 }
 
-                if (!this._hasID) {
+                if (!this._hasID || newID) {
                     this._id = this._clip.Play();
                     this._hasID = true;
                 } else {
