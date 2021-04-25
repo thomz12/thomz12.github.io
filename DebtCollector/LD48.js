@@ -278,7 +278,7 @@ H5.assembly("LD48", function ($asm, globals) {
                     this.BPM = 132;
                     this.GAME_TIME = 160;
                     this.KICK_IN_BPM_EFFECT = 14.5;
-                    this.MAX_WEBSITES = 2;
+                    this.MAX_WEBSITES = 6;
                 }
             }
         },

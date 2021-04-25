@@ -4,6 +4,10 @@ Textures/Website.png
 Textures/WebsiteBlocked.png
 Textures/Website0.png
 Textures/Website1.png
+Textures/Website2.png
+Textures/Website3.png
+Textures/Website4.png
+Textures/Website5.png
 Textures/WebsiteBuyFrame.png
 Textures/Charge.png
 Textures/backgroundData.png
