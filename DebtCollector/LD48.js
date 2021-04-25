@@ -334,7 +334,7 @@ H5.assembly("LD48", function ($asm, globals) {
         ctors: {
             init: function () {
                 var $t;
-                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "Call me maybe.", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(98), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "Sign here, here, here!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
+                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "Call me maybe.", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(150), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "Sign here, here, here!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
             },
             ctor: function (manager) {
                 this.$initialize();
@@ -538,7 +538,7 @@ H5.assembly("LD48", function ($asm, globals) {
 
                                 audio.v.Stop();
                                 audio.v.Play();
-                                audio.v.SetVolume(0.2);
+                                audio.v.SetVolume(0.5);
                             }
 
                             JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, function (x) {
