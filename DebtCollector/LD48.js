@@ -120,6 +120,13 @@ H5.assembly("LD48", function ($asm, globals) {
             InitializeScene: function () {
                 this.ScaleGame();
 
+                var text = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                text.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                text.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                text.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(1, -1);
+                text.DisplayText = "Created by Mathijs Koning and Thom Zeilstra for Ludum Dare 48";
+                text.ResizeToText(16);
+
                 this._background = this.AddGameObject$1("Background");
                 var map = this._background.AddComponent(JuiceboxEngine.TileMap);
                 map.TileSize = 16;
