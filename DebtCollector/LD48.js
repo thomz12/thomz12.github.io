@@ -231,6 +231,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             var entry = leaderboard.Entries.getItem(i).$clone();
 
                             var lbEntryObj = this.AddGameObject$1(System.String.format("Entry{0}", [i]));
+                            lbEntryObj.Enabled = false;
                             entries[i] = lbEntryObj;
 
                             lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
@@ -276,11 +277,67 @@ H5.assembly("LD48", function ($asm, globals) {
                                 entries[i1].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i1) * (0.049087387);
                             }
                         }));
+
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.RevealLeaderboard(entries));
                     } else {
                         this._leaderboardText.DisplayText = "Can't load leaderboard.";
                         System.Console.WriteLine("Failed to get leaderboards... :(");
                     }
                 }));
+            },
+            RevealLeaderboard: function (objects) {
+                var $step = 0,
+                    $jumpFromFinally,
+                    $returnValue,
+                    i,
+                    $async_e;
+
+                var $enumerator = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($step) {
+                                case 0: {
+                                    i = 0;
+                                        $step = 1;
+                                        continue;
+                                }
+                                case 1: {
+                                    if ( i < objects.length ) {
+                                            $step = 2;
+                                            continue;
+                                        }
+                                    $step = 5;
+                                    continue;
+                                }
+                                case 2: {
+                                    objects[i].Enabled = true;
+                                        $enumerator.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.02);
+                                        $step = 3;
+                                        return true;
+                                }
+                                case 3: {
+                                    $step = 4;
+                                    continue;
+                                }
+                                case 4: {
+                                    i = (i + 1) | 0;
+                                    $step = 1;
+                                    continue;
+                                }
+                                case 5: {
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($async_e1) {
+                        $async_e = System.Exception.create($async_e1);
+                        throw $async_e;
+                    }
+                }));
+                return $enumerator;
             },
             PreUpdate: function () {
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-16, -16), JuiceboxEngine.Util.Time.DeltaTime), this._defaultZoom));
@@ -368,6 +425,7 @@ H5.assembly("LD48", function ($asm, globals) {
             _debtPerSecondText: null,
             _debtPerSecondTextShadow: null,
             _timerText: null,
+            _helpText: null,
             _websiteParticles: null,
             _fixedCharges: null,
             debt: System.UInt64(0),
@@ -386,7 +444,7 @@ H5.assembly("LD48", function ($asm, globals) {
         ctors: {
             init: function () {
                 var $t;
-                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "Call me maybe.", $t.unlockPrice = System.UInt64(50), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(150), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "Sign here, here, here!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
+                this.FixedCharges = System.Array.init([($t = new LD48.FixedCharge(), $t.id = 0, $t.name = "Food", $t.price = System.UInt64(10), $t.debtPerSecond = System.UInt64(1), $t.desc = "I'm getting hungry.", $t.unlockPrice = System.UInt64(10), $t), ($t = new LD48.FixedCharge(), $t.id = 1, $t.name = "Phone", $t.price = System.UInt64(97), $t.debtPerSecond = System.UInt64(11), $t.desc = "Call me maybe.", $t.unlockPrice = System.UInt64(20), $t), ($t = new LD48.FixedCharge(), $t.id = 2, $t.name = "Utilities", $t.price = System.UInt64(890), $t.debtPerSecond = System.UInt64(150), $t.desc = "Unlimited power!", $t.unlockPrice = System.UInt64(97), $t), ($t = new LD48.FixedCharge(), $t.id = 3, $t.name = "Car loan", $t.price = System.UInt64(13059), $t.debtPerSecond = System.UInt64(2000), $t.desc = "Money goes vrooom.", $t.unlockPrice = System.UInt64(890), $t), ($t = new LD48.FixedCharge(), $t.id = 4, $t.name = "Mortgage", $t.price = System.UInt64(147923), $t.debtPerSecond = System.UInt64(12000), $t.desc = "Sign here, here, here!", $t.unlockPrice = System.UInt64(13059), $t)], LD48.FixedCharge);
             },
             ctor: function (manager) {
                 this.$initialize();
@@ -583,6 +641,7 @@ H5.assembly("LD48", function ($asm, globals) {
                                 this.debtPerSecond = this.debtPerSecond.add(fixedCharge.v.debtPerSecond);
                                 this.debt = this.debt.sub(fixedCharge.v.price);
                                 this._shownDebt = this.debt;
+                                this._helpText.Enabled = false;
 
                                 fixedCharge.v.owned = fixedCharge.v.owned.inc();
                                 fixedCharge.v.price = H5.Int.clipu64(System.Int64.toNumber(fixedCharge.v.price) * JuiceboxEngine.Math.JMath.Pow(1.15, System.Int64.toNumber(fixedCharge.v.owned)));
@@ -651,6 +710,13 @@ H5.assembly("LD48", function ($asm, globals) {
                 exitSprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 20, 128, 20);
                 exitSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-35, -9);
 
+                this._helpText = this.AddGameObject$1("help").AddComponent(JuiceboxEngine.TextComponent);
+                this._helpText.DisplayText = "Exchange debt to gain\n  debt automatically!";
+                this._helpText.Alignment = JuiceboxEngine.GUI.TextAlignment.Center;
+
+                this._helpText.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -110);
+                this._helpText.Enabled = false;
+
                 this._exit.Enabled = false;
             },
             WebsiteEnter: function (ev) {
@@ -711,6 +777,14 @@ H5.assembly("LD48", function ($asm, globals) {
                 for (var i = 0; i < this.FixedCharges.length; i = (i + 1) | 0) {
                     if (!this._fixedCharges[i].Enabled) {
                         this._fixedCharges[i].Enabled = this.debt.gte(this.FixedCharges[i].unlockPrice);
+
+                        if (this._fixedCharges[i].Enabled) {
+                            this._helpText.Parent.Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(this._fixedCharges[i].Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, -26));
+
+                            if (i === 0) {
+                                this._helpText.Enabled = true;
+                            }
+                        }
                     }
                 }
             },
@@ -754,6 +828,7 @@ H5.assembly("LD48", function ($asm, globals) {
                             var entry = leaderboard.Entries.getItem(i).$clone();
 
                             var lbEntryObj = this.AddGameObject$1(System.String.format("Entry{0}", [i]));
+                            lbEntryObj.Enabled = false;
                             entries[i] = lbEntryObj;
 
                             lbEntryObj.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, H5.Int.mul(-20, i), -1.0);
@@ -783,7 +858,14 @@ H5.assembly("LD48", function ($asm, globals) {
                             var text = lbEntryObj.AddComponent(JuiceboxEngine.TextComponent);
                             text.Alignment = JuiceboxEngine.GUI.TextAlignment.Left;
                             text.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-62, -64);
-                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, System.Int32.format(entry.value, "#,##"));
+
+                            var name = entry.displayName;
+                            if (name != null && name.length > 12) {
+                                name = name.substr(0, 10);
+                                name = (name || "") + "..";
+                            }
+
+                            text.DisplayText = System.String.format("{0}. {1} - {2}", entry.position, name, System.Int32.format(entry.value, "#,##"));
                             text.Color = JuiceboxEngine.Math.Color.Black.$clone();
                         }
 
@@ -792,10 +874,66 @@ H5.assembly("LD48", function ($asm, globals) {
                                 entries[i1].Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + i1) * (0.049087387);
                             }
                         }));
+
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.RevealLeaderboard(entries));
                     } else {
                         System.Console.WriteLine("Failed to get leaderboards... :(");
                     }
                 }));
+            },
+            RevealLeaderboard: function (objects) {
+                var $step = 0,
+                    $jumpFromFinally,
+                    $returnValue,
+                    i,
+                    $async_e;
+
+                var $enumerator = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($step) {
+                                case 0: {
+                                    i = 0;
+                                        $step = 1;
+                                        continue;
+                                }
+                                case 1: {
+                                    if ( i < objects.length ) {
+                                            $step = 2;
+                                            continue;
+                                        }
+                                    $step = 5;
+                                    continue;
+                                }
+                                case 2: {
+                                    objects[i].Enabled = true;
+                                        $enumerator.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.1);
+                                        $step = 3;
+                                        return true;
+                                }
+                                case 3: {
+                                    $step = 4;
+                                    continue;
+                                }
+                                case 4: {
+                                    i = (i + 1) | 0;
+                                    $step = 1;
+                                    continue;
+                                }
+                                case 5: {
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($async_e1) {
+                        $async_e = System.Exception.create($async_e1);
+                        throw $async_e;
+                    }
+                }));
+                return $enumerator;
             },
             PreUpdate: function () {
                 if (this._timeLeft < 0) {
