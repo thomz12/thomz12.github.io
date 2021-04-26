@@ -154,7 +154,6 @@ H5.assembly("LD48", function ($asm, globals) {
                 var ui = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
                 ui.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(128, 16), this._defaultZoom), 2);
                 ui.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
-                ui.ShowDebugBounds = true;
 
                 ui.addOnMouseUp(H5.fn.bind(this, function (ev) {
                     this.AskUsername("Leaderboard user name:");
