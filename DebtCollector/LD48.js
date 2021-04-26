@@ -61,6 +61,7 @@ H5.assembly("LD48", function ($asm, globals) {
             _start: null,
             _background: null,
             _leaderboardText: null,
+            _nameText: null,
             _audio: null,
             _loginID: null,
             _lowestScroll: 0
@@ -91,6 +92,7 @@ H5.assembly("LD48", function ($asm, globals) {
                     this._loginID = System.Guid.NewGuid().toString();
 
                     System.Console.WriteLine("Registering with Playfab...");
+                    this._nameText.DisplayText = "Registering...";
                     JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginWithCustomID(this._loginID, true);
                 } else {
                     System.Console.WriteLine("Logging in with Playfab...");
@@ -101,7 +103,14 @@ H5.assembly("LD48", function ($asm, globals) {
             LoginFinished: function (task) {
                 if (task.Success) {
                     JuiceboxEngine.Util.LocalStorage.StoreValue("login_id", this._loginID);
+                    this._nameText.DisplayText = "Welcome!";
                     System.Console.WriteLine(System.String.format("Logged in with Playfab! {0}", [JuiceboxEngine.Playfab.PlayfabManager.Identity.Username]));
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayNameTask.addOnTaskCompleted(H5.fn.bind(this, function (nameTask) {
+                        if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username != null) {
+                            this._nameText.DisplayText = System.String.format("Welcome, {0}", [JuiceboxEngine.Playfab.PlayfabManager.Identity.Username]);
+                        }
+                    }));
                 } else {
                     System.Console.WriteLine("Failed to log in with Playfab.");
                 }
@@ -109,7 +118,6 @@ H5.assembly("LD48", function ($asm, globals) {
                 this.ShowLeaderboard();
             },
             InitializeScene: function () {
-                this.Login();
                 this.ScaleGame();
 
                 this._background = this.AddGameObject$1("Background");
@@ -138,6 +146,33 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 this._leaderboardText.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -48);
 
+                this._nameText = this.AddGameObject().AddComponent(JuiceboxEngine.TextComponent);
+                this._nameText.Alignment = JuiceboxEngine.GUI.TextAlignment.Center;
+                this._nameText.DisplayText = "Logging in...";
+                this._nameText.Color = JuiceboxEngine.Math.Color.Black.$clone();
+
+                var ui = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                ui.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(128, 16), this._defaultZoom), 2);
+                ui.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                ui.ShowDebugBounds = true;
+
+                ui.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this.AskUsername("Leaderboard user name:");
+                }));
+
+                ui.addOnMouseEnter(H5.fn.bind(this, function (ev) {
+                    this._nameText.Color = JuiceboxEngine.Math.Color.White.$clone();
+                }));
+
+                ui.addOnMouseExit(H5.fn.bind(this, function (ev) {
+                    this._nameText.Color = JuiceboxEngine.Math.Color.Black.$clone();
+                }));
+
+                var uiComp = this._nameText.Parent.AddComponent(JuiceboxEngine.UIComponent);
+                uiComp.Setup(ui, this);
+
+                this._nameText.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 16);
+
                 var startelement = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
                 startelement.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(80, 20), this._defaultZoom), 2);
                 startelement.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
@@ -156,14 +191,7 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 startelement.addOnMouseUp(H5.fn.bind(this, function (x) {
                     if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
-                        var username = JuiceboxEngine.Util.Browser.Prompt("Leaderboard user name:", System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
-
-                        if (username == null) {
-                            this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
-                        }
-
-                        var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
-                        task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+                        this.AskUsername("Leaderboard user name:");
                     } else {
                         this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
                     }
@@ -178,6 +206,8 @@ H5.assembly("LD48", function ($asm, globals) {
                 startSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/buttons.png");
                 startSprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 0, 128, 20);
                 startSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-35, -9);
+
+                this.Login();
             },
             ShowLeaderboard: function () {
                 var task = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard("Highscore", 0, 100);
@@ -269,19 +299,26 @@ H5.assembly("LD48", function ($asm, globals) {
                 this._title.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * (0.09817477);
                 this._start.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + 1) * (0.09817477);
             },
-            UpdateUsername: function (task) {
-                if (task.Success) {
-                    this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
-                } else {
-                    var username = JuiceboxEngine.Util.Browser.Prompt("Something went wrong. " + (task.ErrorMessage || ""), System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]));
+            AskUsername: function (msg) {
+                var preview = JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null ? System.String.format("Guest #{0}", [JuiceboxEngine.Util.Random.NextRange(0, 999999)]) : JuiceboxEngine.Playfab.PlayfabManager.Identity.Username;
+                var username = JuiceboxEngine.Util.Browser.Prompt(msg, preview);
 
-                    if (username == null) {
-                        this.SceneManager.SwitchToScene(new LD48.MainScene(this.ResourceManager));
+                if (username == null) {
+                    if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
+                        username = preview;
+                    } else {
                         return;
                     }
+                }
 
-                    var newTask = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
-                    newTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+                var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+            },
+            UpdateUsername: function (task) {
+                if (task.Success) {
+                    this._nameText.DisplayText = System.String.format("Welcome, {0}", [JuiceboxEngine.Playfab.PlayfabManager.Identity.Username]);
+                } else {
+                    this.AskUsername("Something went wrong. " + (task.ErrorMessage || ""));
                 }
             },
             LateUpdate: function () {
@@ -625,7 +662,7 @@ H5.assembly("LD48", function ($asm, globals) {
 
                 var audio = this._website.GetComponent(JuiceboxEngine.Audio.AudioComponent);
 
-                audio.Play(true);
+                audio.Play();
                 audio.SetVolume(0.35);
 
                 if (!this._finished) {
