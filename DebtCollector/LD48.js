@@ -986,17 +986,17 @@ H5.assembly("LD48", function ($asm, globals) {
                         this.DefaultCamera.Zoom = this._defaultZoom + JuiceboxEngine.Math.JMath.Clamp$1(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.TWO_PI * (2)), 0, 1) * 0.025;
                     }
 
-                    this._debtTimer += JuiceboxEngine.Util.Time.DeltaTime;
+                    this._debtTimer += JuiceboxEngine.Util.Time.DeltaTimeRealTime;
                     this._timeLeft -= JuiceboxEngine.Util.Time.DeltaTimeRealTime;
 
                     var span = System.TimeSpan.fromSeconds(this._timeLeft);
                     this._timerText.DisplayText = System.String.format("{0}:{1} remaining", span.getMinutes(), System.String.alignString(H5.toString(span.getSeconds()), 2, 48));
 
-                    if (this._debtTimer >= 1.0) {
+                    while (this._debtTimer >= 1.0) {
                         this.AddDebt(this.debtPerSecond);
                         this.BurstDollars(this.debtPerSecond.equals(System.UInt64(0)) ? 0 : ((((H5.Int.div(System.Int64.clip32(this.debtPerSecond), 5)) | 0) + 1) | 0), this._debtPerSecondCounter.Transform.Position2D.$clone());
 
-                        this._debtTimer = 0;
+                        this._debtTimer -= 1.0;
 
                         for (var i1 = 0; i1 < this._fixedCharges.length; i1 = (i1 + 1) | 0) {
                             this._fixedChargesGenerated[i1] = this._fixedChargesGenerated[i1].add((this.FixedCharges[i1].debtPerSecond.mul(this.FixedCharges[i1].owned)));
