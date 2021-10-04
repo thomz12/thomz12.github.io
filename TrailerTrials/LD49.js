@@ -948,7 +948,7 @@ H5.assembly("LD49", function ($asm, globals) {
                 }
             },
             GetCameraTargetPos: function () {
-                return JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Addition(this._truck.Position.$clone(), this._goal.GameObj.Transform.Position2D.$clone())), 2);
+                return JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Addition(JuiceboxEngine.Math.Vector2.op_Multiply$1(this._truck.Position.$clone(), 2), this._goal.GameObj.Transform.Position2D.$clone())), 3);
             },
             /**
              * Called every frame, before any gameobject updates.
