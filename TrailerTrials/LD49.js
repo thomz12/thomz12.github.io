@@ -1068,7 +1068,11 @@ H5.assembly("LD49", function ($asm, globals) {
             methods: {
                 FormatMS: function (ms) {
                     var span = System.TimeSpan.fromMilliseconds(ms);
-                    return span.toString("mm\\:ss\\.fff");
+                    var spanString = span.toString("mm\\:ss");
+
+                    var milliseconds = H5.toString(ms);
+                    milliseconds = milliseconds.substr(((milliseconds.length - 3) | 0));
+                    return (spanString || "") + "." + (milliseconds || "");
                 }
             }
         }
