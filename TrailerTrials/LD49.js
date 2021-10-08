@@ -1262,10 +1262,10 @@ H5.assembly("LD49", function ($asm, globals) {
                     }
                 }
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("w") || forward) {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("w") || JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("arrowup") || forward) {
                     speed = 5;
                 } else {
-                    if ((JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("s") || backward) && !this.Attached.Locked) {
+                    if ((JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("s") || JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("arrowdown") || backward) && !this.Attached.Locked) {
                         speed = -3;
                     }
                 }
@@ -1274,10 +1274,10 @@ H5.assembly("LD49", function ($asm, globals) {
 
                 this.Position = JuiceboxEngine.Math.Vector2.op_Addition(this.Position.$clone(), JuiceboxEngine.Math.Vector2.op_Multiply$1(direction.$clone(), JuiceboxEngine.Util.Time.DeltaTime));
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("a") || left) {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("a") || JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("arrowleft") || left) {
                     this.Rotation += (0.5235988) * speed * JuiceboxEngine.Util.Time.DeltaTime;
                 } else {
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("d") || right) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("d") || JuiceboxEngine.Input.InputManager.Instance.IsKeyDown("arrowright") || right) {
                         this.Rotation -= (0.5235988) * speed * JuiceboxEngine.Util.Time.DeltaTime;
                     }
                 }
