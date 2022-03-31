@@ -1,4 +1,4 @@
-﻿precision mediump float;
+﻿precision highp float;
 
 // Attributes.
 attribute vec4 a_pos;

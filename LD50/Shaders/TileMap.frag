@@ -1,4 +1,4 @@
-﻿precision mediump float;
+﻿precision highp float;
 
 // Varyings.
 varying vec2 v_pixelCoord;
@@ -42,4 +42,10 @@ void main()
 	vec2 spriteCoord = mod(v_pixelCoord / ZOOM, tileSize);
 	
 	gl_FragColor = texture2D(sprites, (spriteOffset + spriteCoord) * (1.0 / spritesSize));
+
+	//if(v_texCoord.y > 0.75)
+		//gl_FragColor = vec4(tile.x / 255.0, tile.y / 255.0, 0.0, 1.0);
+
+	//if(v_texCoord.y > 0.80)
+		//gl_FragColor = vec4(((spriteOffset + spriteCoord) * (1.0 / spritesSize)).x, ((spriteOffset + spriteCoord) * (1.0 / spritesSize)).y, 0.0, 1.0);
 }
