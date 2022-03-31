@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.6.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.7.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -2852,11 +2852,16 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var dpr = H5.Int.clip32(ratio);
                 System.Console.WriteLine("Device Pixel Ratio: " + System.Double.format(ratio));
 
-                this._canvas.width = H5.Int.umul(((window.innerWidth) >>> 0), (dpr >>> 0));
-                this._canvas.height = H5.Int.umul(((window.innerHeight) >>> 0), (dpr >>> 0));
+                var width = H5.Int.umul(((window.innerWidth) >>> 0), (dpr >>> 0));
+                var height = H5.Int.umul(((window.innerHeight) >>> 0), (dpr >>> 0));
 
-                this._canvas.style.width = "100%";
-                this._canvas.style.height = "100%";
+                width = (width + (width % 2)) >>> 0;
+                height = (height + (height % 2)) >>> 0;
+
+                this._canvas.width = width;
+                this._canvas.height = height;
+                this._canvas.style.width = width;
+                this._canvas.style.height = height;
 
                 this.Resize(((H5.Int.div(((this._canvas.width) | 0), dpr)) | 0), ((H5.Int.div(((this._canvas.height) | 0), dpr)) | 0), dpr);
             },
@@ -14536,6 +14541,16 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              */
             Fullscreen: false,
             /**
+             * Splash screen text when preloading assets.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Util.ConfigModel
+             * @function SplashText
+             * @type string
+             */
+            SplashText: null,
+            /**
              * The ID of the canvas to use for rendering.
              *
              * @instance
@@ -14574,6 +14589,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.PreloadList = json.PreloadList;
                 this.CanvasID = json.CanvasID;
                 this.Fullscreen = json.Fullscreen;
+                this.SplashText = json.SplashText;
                 this.PlayfabTitleID = json.PlayfabTitleID;
                 this.WebSocketServer = json.WebSocketServer;
             }
@@ -18304,14 +18320,16 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(15, 15, 15, 255);
 
                 var icon = this.AddGameObject$1("Icon");
-                icon.Transform.Position = new JuiceboxEngine.Math.Vector3.$ctor2(0, 0, 1.0);
+                icon.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 16);
+
                 this._icon = icon.AddComponent(JuiceboxEngine.Sprite);
-                this._icon.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-8.0, 16.0);
+                this._icon.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-8.0, -8.0);
                 this._icon.Color = JuiceboxEngine.Math.Color.White.$clone();
                 this._icon.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/JuiceboxIcon.png");
 
                 var textComponent = icon.AddComponent(JuiceboxEngine.TextComponent);
-                textComponent.DisplayText = "Juicebox Engine";
+                textComponent.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(0, -32);
+                textComponent.DisplayText = JuiceboxEngine.Util.Config.ConfigValues.SplashText == null ? "Juicebox Engine" : JuiceboxEngine.Util.Config.ConfigValues.SplashText;
                 textComponent.Alignment = JuiceboxEngine.GUI.TextAlignment.Center;
 
                 this._info = new JuiceboxEngine.GUI.Text(this.GUI.Root);
@@ -18322,7 +18340,6 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(1.0, H5.fn.bind(this, function (x) {
                     this._icon.Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.Easings.ElasticEaseIn(1.0 - x)));
-                    this._icon.Offset = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(-8.0, 16.0), (1 + JuiceboxEngine.Math.Easings.ElasticEaseIn(1.0 - x)));
                 })));
             },
             /**
