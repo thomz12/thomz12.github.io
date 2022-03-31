@@ -1,0 +1,38 @@
+{
+  "Gameobjects": [
+    {
+      "Name": "Background",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 0,
+          "Y": 0,
+          "Rotation": 0
+        },
+        {
+          "Type": "TileMap",
+          "Sprites": "Textures\\RuralVillageTerrain.png",
+          "MapData": "Levels\\Main-1.png",
+          "TileSize": 16
+        }
+      ]
+    },
+    {
+      "Name": "Features",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 0,
+          "Y": 0,
+          "Rotation": 0
+        },
+        {
+          "Type": "TileMap",
+          "Sprites": "Textures\\RuralVillageTerrain.png",
+          "MapData": "Levels\\Main-2.png",
+          "TileSize": 16
+        }
+      ]
+    }
+  ]
+}
