@@ -33,6 +33,33 @@
           "TileSize": 16
         }
       ]
+    },
+    {
+      "Name": "Collider",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 0,
+          "Y": 116,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 416,
+          "Height": 32
+        }
+      ]
+    },
+    {
+      "Name": "Player",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 96,
+          "Y": 80,
+          "Rotation": 0
+        }
+      ]
     }
   ]
 }
