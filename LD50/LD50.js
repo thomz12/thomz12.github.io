@@ -275,7 +275,8 @@ H5.assembly("LD50", function ($asm, globals) {
             _moving: false,
             _aimingObject: null,
             _dishMass: 0,
-            _scoreText: null
+            _scoreText: null,
+            _background: null
         },
         ctors: {
             /**
@@ -309,6 +310,18 @@ H5.assembly("LD50", function ($asm, globals) {
             InitializeScene: function () {
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
                 this.DefaultCamera.Zoom = 4;
+
+                this._background = this.AddGameObject$1("background");
+                var music = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                music.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Audio/background_music.mp3"));
+                music.Play();
+                music.Loop(true);
+
+                var map = this._background.AddComponent(JuiceboxEngine.TileMap);
+                map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/background.png");
+                map.TileSize = 32;
+                map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
+
 
                 this.LoadLevel(this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/Main.json"));
 
@@ -417,6 +430,8 @@ H5.assembly("LD50", function ($asm, globals) {
              */
             LateUpdate: function () {
                 var $t;
+                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(16, 16), JuiceboxEngine.Util.Time.DeltaTime));
+
                 this._highestPoint = this.GetHighestPoint();
                 var camPos = this.DefaultCamera.Parent.Transform.Position2D.$clone();
 

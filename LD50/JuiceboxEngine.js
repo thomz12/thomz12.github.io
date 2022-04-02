@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.10.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.11.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -12386,7 +12386,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Update: function () {
-                this._world.step(this.FixedTimeStep);
+                this._world.step(JuiceboxEngine.Util.Time.DeltaTime * 2);
             }
         }
     });

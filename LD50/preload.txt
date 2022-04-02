@@ -2,3 +2,5 @@ Levels/Main.json
 Levels/Main-1.png
 Textures/Kitchen.png
 Textures/Dishes.png
+Textures/background.png
+Audio/background_music.mp3
