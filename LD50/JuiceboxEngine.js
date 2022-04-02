@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.9.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.10.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -12318,7 +12318,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             ctor: function () {
                 this.$initialize();
                 var config = { };
-                config.gravity = System.Array.init([0, -9.81], System.Double);
+                config.gravity = System.Array.init([0, -98.1], System.Double);
 
                 this.FixedTimeStep = 0.016666668;
 
@@ -18075,6 +18075,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 set: function (value) {
                     this._lockRotation = value;
                     this.body.fixedRotation = value === false ? 0 : 1;
+                }
+            },
+            Type: {
+                set: function (value) {
+                    this.body.type = value;
                 }
             },
             /**

@@ -80,6 +80,172 @@ H5.assembly("LD50", function ($asm, globals) {
         }
     });
 
+    H5.define("LD50.JuiceUI.JuiceUIPanel", {
+        inherits: [JuiceboxEngine.GUI.EmptyUIElement],
+        fields: {
+            _front: null,
+            _back: null,
+            _height: 0
+        },
+        props: {
+            /**
+             * How far the panels are out from each other.
+             *
+             * @instance
+             * @public
+             * @memberof LD50.JuiceUI.JuiceUIPanel
+             * @function Height
+             * @type number
+             */
+            Height: {
+                get: function () {
+                    return this._height;
+                },
+                set: function (value) {
+                    this._height = value;
+                    this.ForceUpdate();
+                }
+            }
+        },
+        ctors: {
+            ctor: function (parent) {
+                this.$initialize();
+                JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this._back = new JuiceboxEngine.GUI.SlicedImage(this);
+                this._front = new JuiceboxEngine.GUI.SlicedImage(this);
+
+                this._back.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, LD50.JuiceUI.JuiceUIConsts.PANEL_TEXTURE_PATH);
+                this._front.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, LD50.JuiceUI.JuiceUIConsts.PANEL_TEXTURE_PATH);
+
+                this._back.Border = LD50.JuiceUI.JuiceUIConsts.PANEL_BORDER_WIDTH;
+                this._front.Border = LD50.JuiceUI.JuiceUIConsts.PANEL_BORDER_WIDTH;
+
+                this._height = LD50.JuiceUI.JuiceUIConsts.PANEL_OFFSET;
+
+                this._back.Color = LD50.JuiceUI.JuiceUIConsts.PANEL_BACK.$clone();
+                this._front.Color = LD50.JuiceUI.JuiceUIConsts.PANEL_FRONT.$clone();
+            }
+        },
+        methods: {
+            UpdateElement: function () {
+                JuiceboxEngine.GUI.EmptyUIElement.prototype.UpdateElement.call(this);
+
+                this._back.Position = new JuiceboxEngine.Math.Vector2.$ctor3(this.Height, -this.Height);
+                this._front.Position = new JuiceboxEngine.Math.Vector2.$ctor3(-this.Height, this.Height);
+
+                this._back.Dimensions = this.Dimensions.$clone();
+                this._front.Dimensions = this.Dimensions.$clone();
+            }
+        }
+    });
+
+    H5.define("LD50.JuiceUI.JuiceUIConsts", {
+        statics: {
+            fields: {
+                /**
+                 * Default 32 size font.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @default "JuiceUI/AldotheApache32.bff"
+                 * @type string
+                 */
+                FONT_32_PATH: null,
+                /**
+                 * Default 48 size font.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @default "JuiceUI/AldotheApache48.bff"
+                 * @type string
+                 */
+                FONT_48_PATH: null,
+                /**
+                 * Default shadow offset.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @type JuiceboxEngine.Math.Point
+                 */
+                FONT_SHADOW_OFFSET: null,
+                /**
+                 * Panel image for UI.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @default "JuiceUI/Panel.png"
+                 * @type string
+                 */
+                PANEL_TEXTURE_PATH: null,
+                /**
+                 * Border of panel image.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @default 5
+                 * @type number
+                 */
+                PANEL_BORDER_WIDTH: 0,
+                /**
+                 * Offset of two panel images from each other.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @default 2.0
+                 * @type number
+                 */
+                PANEL_OFFSET: 0,
+                /**
+                 * Default panel front color.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @type JuiceboxEngine.Math.Color
+                 */
+                PANEL_FRONT: null,
+                /**
+                 * Default panel back color.
+                 *
+                 * @static
+                 * @public
+                 * @readonly
+                 * @memberof LD50.JuiceUI.JuiceUIConsts
+                 * @type JuiceboxEngine.Math.Color
+                 */
+                PANEL_BACK: null
+            },
+            ctors: {
+                init: function () {
+                    this.FONT_SHADOW_OFFSET = new JuiceboxEngine.Math.Point();
+                    this.PANEL_FRONT = new JuiceboxEngine.Math.Color();
+                    this.PANEL_BACK = new JuiceboxEngine.Math.Color();
+                    this.FONT_32_PATH = "JuiceUI/AldotheApache32.bff";
+                    this.FONT_48_PATH = "JuiceUI/AldotheApache48.bff";
+                    this.FONT_SHADOW_OFFSET = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                    this.PANEL_TEXTURE_PATH = "JuiceUI/Panel.png";
+                    this.PANEL_BORDER_WIDTH = 5;
+                    this.PANEL_OFFSET = 2.0;
+                    this.PANEL_FRONT = new JuiceboxEngine.Math.Color.$ctor2(252, 163, 17, 255);
+                    this.PANEL_BACK = new JuiceboxEngine.Math.Color.$ctor2(43, 44, 40, 255);
+                }
+            }
+        }
+    });
+
     /** @namespace LD50 */
 
     /**
@@ -93,9 +259,12 @@ H5.assembly("LD50", function ($asm, globals) {
         fields: {
             _counter: null,
             _dishes: null,
+            _highestPoint: 0,
+            _curHeight: 0,
             _aiming: false,
             _aimingObject: null,
-            _dishMass: 0
+            _dishMass: 0,
+            _scoreText: null
         },
         ctors: {
             /**
@@ -112,7 +281,7 @@ H5.assembly("LD50", function ($asm, globals) {
             ctor: function (manager) {
                 this.$initialize();
                 JuiceboxEngine.Scene.ctor.call(this, manager);
-                this._dishes = new (System.Collections.Generic.List$1(JuiceboxEngine.GameObject)).ctor();
+                this._dishes = new (System.Collections.Generic.List$1(JuiceboxEngine.Physics.BodyP2)).ctor();
             }
         },
         methods: {
@@ -136,6 +305,12 @@ H5.assembly("LD50", function ($asm, globals) {
 
                 this._counter = this.GetObjectByName("Counter");
                 this._aiming = true;
+
+                this._scoreText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                this._scoreText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                this._scoreText.DisplayText = "";
+                this._scoreText.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(2000, 48);
+                this._scoreText.Pivot = new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 0.0);
             },
             /**
              * Called every frame, before any gameobject updates.
@@ -154,6 +329,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     }
 
                     var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
+                    body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(body.Position.X, this.DefaultCamera.Parent.Transform.Position2D.Y + 48);
 
                     if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("a")) {
                         body.Position = (JuiceboxEngine.Math.Vector2.op_Addition(body.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-64 * JuiceboxEngine.Util.Time.DeltaTime, 0)));
@@ -176,6 +352,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     if (this._aimingObject != null) {
                         if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping) {
                             this._aiming = true;
+                            this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Type = 2;
                             this._aimingObject = null;
                         }
                     }
@@ -207,7 +384,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     body.AddRectangle(rect.$clone());
                 }
 
-                this._dishes.add(dishObj);
+                this._dishes.add(body);
 
                 return dishObj;
             },
@@ -228,6 +405,24 @@ H5.assembly("LD50", function ($asm, globals) {
              */
             LateUpdate: function () {
                 var $t;
+                this._highestPoint = this.GetHighestPoint();
+                var camPos = this.DefaultCamera.Parent.Transform.Position2D.$clone();
+
+                if (this._curHeight < 48) {
+                    this._curHeight = 48;
+                }
+
+                var interpolatedHeight = JuiceboxEngine.Math.JMath.Interpolate(this._curHeight, this._highestPoint, 3.0 * JuiceboxEngine.Util.Time.DeltaTime);
+                this._curHeight = interpolatedHeight;
+
+                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(camPos.X - 100, interpolatedHeight), new JuiceboxEngine.Math.Vector2.$ctor3(camPos.X + 100, interpolatedHeight), new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 128), 1);
+                this._scoreText.DisplayText = System.Single.format((JuiceboxEngine.Math.JMath.Round(interpolatedHeight * 10) / 10));
+                this._scoreText.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.75, this.DefaultCamera.WorldToScreenPoint(new JuiceboxEngine.Math.Vector2.$ctor3(0, interpolatedHeight)).Y);
+
+                if (this._highestPoint - this._curHeight < 1.0) {
+                    this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(camPos.X, JuiceboxEngine.Math.JMath.Interpolate(camPos.Y, this._highestPoint, 2.0 * JuiceboxEngine.Util.Time.DeltaTime));
+                }
+
                 if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("h")) {
                     this.DebugBodyShape(this._counter.GetComponent(JuiceboxEngine.Physics.BodyP2));
 
@@ -235,7 +430,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     try {
                         while ($t.moveNext()) {
                             var dish = $t.Current;
-                            this.DebugBodyShape(dish.GetComponent(JuiceboxEngine.Physics.BodyP2));
+                            this.DebugBodyShape(dish);
                         }
                     } finally {
                         if (H5.is($t, System.IDisposable)) {
@@ -243,6 +438,25 @@ H5.assembly("LD50", function ($asm, globals) {
                         }
                     }
                 }
+            },
+            GetHighestPoint: function () {
+                var highest = 48;
+
+                for (var i = 0; i < this._dishes.Count; i = (i + 1) | 0) {
+                    var body = this._dishes.getItem(i);
+
+                    if (H5.referenceEquals(body.Parent, this._aimingObject)) {
+                        continue;
+                    }
+
+                    var height = body.GetAABB().Top;
+
+                    if (height > highest) {
+                        highest = height;
+                    }
+                }
+
+                return highest;
             },
             /**
              * Called when the scene is about to be destroyed.
@@ -425,6 +639,112 @@ H5.assembly("LD50", function ($asm, globals) {
             var game = new JuiceboxEngine.JuiceboxGame();
 
             game.Run(new LD50.MainScene(game.ResourceManager));
+        }
+    });
+
+    H5.define("LD50.JuiceUI.JuiceUIButton", {
+        inherits: [LD50.JuiceUI.JuiceUIPanel],
+        fields: {
+            _routine: null
+        },
+        events: {
+            OnPress: null
+        },
+        ctors: {
+            ctor: function (parent) {
+                this.$initialize();
+                LD50.JuiceUI.JuiceUIPanel.ctor.call(this, parent);
+                this.InputType = JuiceboxEngine.GUI.UIInput.SELF;
+
+                this.addOnMouseEnter(H5.fn.cacheBind(this, this.MouseEnter));
+                this.addOnMouseExit(H5.fn.cacheBind(this, this.MouseExit));
+                this.addOnMouseUp(H5.fn.cacheBind(this, this.MouseUp));
+            }
+        },
+        methods: {
+            SetText: function (displayText, big) {
+                if (big === void 0) { big = false; }
+                var text = new JuiceboxEngine.GUI.Text(this._front);
+                text.ShadowOffset = LD50.JuiceUI.JuiceUIConsts.FONT_SHADOW_OFFSET.$clone();
+                text.DisplayText = displayText;
+                text.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                text.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                if (big) {
+                    text.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                    text.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(text.Font.GetWidth(displayText), 48);
+                } else {
+                    text.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
+                    text.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(text.Font.GetWidth(displayText), 32);
+                }
+            },
+            MouseUp: function (ev) {
+                !H5.staticEquals(this.OnPress, null) ? this.OnPress() : null;
+
+                this._routine = JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                    this.Height = JuiceboxEngine.Math.JMath.Interpolate(LD50.JuiceUI.JuiceUIConsts.PANEL_OFFSET, 0, JuiceboxEngine.Math.Easings.ExponentialEaseOut(x));
+                })));
+
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ClickAnim());
+            },
+            ClickAnim: function () {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    backColor,
+                    frontColor,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    backColor = this._back.Color.$clone();
+                                        frontColor = this._front.Color.$clone();
+
+                                        this._back.Color = JuiceboxEngine.Math.Color.White.$clone();
+                                        this._front.Color = JuiceboxEngine.Math.Color.White.$clone();
+
+                                        $en.current = null;
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    this._back.Color = backColor.$clone();
+                                        this._front.Color = frontColor.$clone();
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
+            },
+            MouseEnter: function (ev) {
+                if (this._routine != null) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StopCoroutine(this._routine);
+                }
+
+                this._routine = JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                    this.Height = JuiceboxEngine.Math.JMath.Interpolate(LD50.JuiceUI.JuiceUIConsts.PANEL_OFFSET, 0, JuiceboxEngine.Math.Easings.ExponentialEaseOut(x));
+                })));
+            },
+            MouseExit: function (ev) {
+                if (this._routine != null) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StopCoroutine(this._routine);
+                }
+
+                this._routine = JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                    this.Height = JuiceboxEngine.Math.JMath.Interpolate(0, LD50.JuiceUI.JuiceUIConsts.PANEL_OFFSET, JuiceboxEngine.Math.Easings.ExponentialEaseOut(x));
+                })));
+            }
         }
     });
 });
