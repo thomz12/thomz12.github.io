@@ -47,9 +47,11 @@ H5.assembly("LD50", function ($asm, globals) {
              */
             InitializeScene: function () {
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
-                this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(400, 200);
+                this.DefaultCamera.Zoom = 4;
 
                 this.LoadLevel(this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/Main.json"));
+
+                this.DefaultCamera.Parent.Transform.Position2D = this.GetObjectByName("CameraPosition").Transform.Position2D.$clone();
             },
             /**
              * Called every frame, before any gameobject updates.
@@ -62,7 +64,7 @@ H5.assembly("LD50", function ($asm, globals) {
              * @return  {void}
              */
             PreUpdate: function () {
-                this.DefaultCamera.Parent.Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * 50, JuiceboxEngine.Math.JMath.Cos(JuiceboxEngine.Util.Time.TotalSeconds) * 50), new JuiceboxEngine.Math.Vector2.$ctor3(400, 200));
+
             },
             /**
              * Called every frame, after all gameobject had an update.

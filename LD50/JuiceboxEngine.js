@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.7.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.8.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -366,6 +366,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                     JuiceboxEngine.Components.ComponentManager.AddComponentFactory(new JuiceboxEngine.Components.Factory.SpriteFactory());
                     JuiceboxEngine.Components.ComponentManager.AddComponentFactory(new JuiceboxEngine.Components.Factory.TileMapFactory());
+                    JuiceboxEngine.Components.ComponentManager.AddComponentFactory(new JuiceboxEngine.Components.Factory.ColliderFactory());
                 }
             },
             methods: {
@@ -2695,7 +2696,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @memberof JuiceboxEngine.Graphics.GraphicsManager
              * @type number
              */
-            DPR: 0,
+            DevicePixelRatio: 0,
             Spritebatch: null,
             /**
              * Size of the pixels (in screen pixels).
@@ -2855,13 +2856,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var width = H5.Int.umul(((window.innerWidth) >>> 0), (dpr >>> 0));
                 var height = H5.Int.umul(((window.innerHeight) >>> 0), (dpr >>> 0));
 
-                width = (width + (width % 2)) >>> 0;
-                height = (height + (height % 2)) >>> 0;
 
                 this._canvas.width = width;
                 this._canvas.height = height;
-                this._canvas.style.width = width;
-                this._canvas.style.height = height;
+                this._canvas.style.width = "100%";
+                this._canvas.style.height = "100%";
 
                 this.Resize(((H5.Int.div(((this._canvas.width) | 0), dpr)) | 0), ((H5.Int.div(((this._canvas.height) | 0), dpr)) | 0), dpr);
             },
@@ -2880,7 +2879,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.Width = width;
                 this.Height = height;
 
-                this.DPR = dpr;
+                this.DevicePixelRatio = dpr;
 
                 !H5.staticEquals(this.OnResize, null) ? this.OnResize(width, height) : null;
             },
@@ -13886,6 +13885,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                         try {
                             while ($t1.moveNext()) {
                                 var comp = H5.cast($t1.Current, System.Object);
+                                if (H5.referenceEquals(comp.Type, "Transform")) {
+                                    gameobject.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(comp.X, comp.Y);
+                                    gameobject.Transform.Rotation2D = comp.Rotation;
+                                }
+
                                 var component = JuiceboxEngine.Components.ComponentManager.CreateComonentFromDynamic(this, comp.Type, comp);
 
                                 if (component != null) {
@@ -15724,6 +15728,29 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         }
     }; });
 
+    H5.define("JuiceboxEngine.Components.Factory.ColliderFactory", {
+        inherits: [JuiceboxEngine.Components.Factory.ComponentFactory],
+        ctors: {
+            ctor: function () {
+                this.$initialize();
+                JuiceboxEngine.Components.Factory.ComponentFactory.ctor.call(this, "Collider");
+            }
+        },
+        methods: {
+            CreateComonent: function (scene) {
+                return new JuiceboxEngine.Physics.BodyP2();
+            },
+            CreateComponentFromDynamic: function (scene, component) {
+                var bodyP2 = this.CreateComonent(scene);
+
+
+                bodyP2.AddRectangle(new JuiceboxEngine.Math.RectangleF.$ctor2(0, 0, component.Width, component.Height));
+
+                return bodyP2;
+            }
+        }
+    });
+
     H5.define("JuiceboxEngine.Components.Factory.SpriteFactory", {
         inherits: [JuiceboxEngine.Components.Factory.ComponentFactory],
         ctors: {
@@ -16729,7 +16756,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 },
                 set: function (value) {
                     if (value !== JuiceboxEngine.Graphics.Texture2D.WrapMode.Clamp) {
-                        if ((this.Height & (((this.Height - 1) | 0))) !== 0 || (this.Width & (((this.Width - 1) | 0))) !== 0) {
+                        if (!this.HasPower2Dimensions()) {
                             System.Console.WriteLine(System.String.format("Texture {0} shouldn't use repeat wrap mode as it's not a power-2 texture.", [this.Name]));
                         }
                     }
@@ -16812,6 +16839,18 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             FinishLoad: function () {
                 !H5.staticEquals(this.onLoad, null) ? this.onLoad(this, null) : null;
                 this.Loaded = true;
+            },
+            /**
+             * Check if the texture has power-2 dimensions.
+             *
+             * @instance
+             * @public
+             * @this JuiceboxEngine.Graphics.Texture2D
+             * @memberof JuiceboxEngine.Graphics.Texture2D
+             * @return  {boolean}        True if all dimensions are power 2, false otherwise.
+             */
+            HasPower2Dimensions: function () {
+                return (this.Height & (((this.Height - 1) | 0))) === 0 && (this.Width & (((this.Width - 1) | 0))) === 0;
             },
             /**
              * Delete texture from graphics memory.
@@ -17039,6 +17078,10 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     texture.Height = (image.height) | 0;
                     texture.sortValue = this._sortValue;
                     texture.FinishLoad();
+
+                    if (!texture.HasPower2Dimensions()) {
+                        System.Console.WriteLine(System.String.format("Texture {0} doesn't have power-2 dimensions in at least one dimension. Consider chaning it to a power-2 dimension to prevent artifacting.", [texture.Name]));
+                    }
 
                     this._sortValue = (this._sortValue + 1) | 0;
                 });
@@ -17881,6 +17924,15 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             _triggerOnly: false,
             _collisionMask: 0,
             _collisionGroup: 0,
+            /**
+             * Indicates if the body has been added to a world yet.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @type boolean
+             */
+            HasWorld: false,
             _collisions: null
         },
         events: {
@@ -17994,6 +18046,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 set: function (value) {
                     this._mass = value;
                     this.body.mass = this._mass;
+
+                    if (this.Mass !== 0) {
+                        this.body.type = H5.virtualc("p2.Body").DYNAMIC;
+                    }
+
                     this.body.updateMassProperties();
                 }
             },
@@ -18101,7 +18158,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.$initialize();
                 JuiceboxEngine.Component.ctor.call(this);
                 var options = { };
-                options.mass = 1;
+                options.mass = 0;
                 options.angle = 0;
                 options.velocity = System.Array.init([0, 0], System.Double);
                 options.angularVelocity = 0;
@@ -18109,6 +18166,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.body = new (H5.virtualc("p2.Body"))(options);
 
                 this._collisions = new (System.Collections.Generic.List$1(JuiceboxEngine.Physics.BodyP2)).ctor();
+                this.HasWorld = false;
 
                 this.body.bodyp2 = this;
             }
@@ -18168,6 +18226,20 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 box.position = System.Array.init([rect.X, rect.Y], System.Double);
 
                 this.body.addShape(box);
+            },
+            GetRectangles: function () {
+                var $t, $t1, $t2;
+                var rects = new (System.Collections.Generic.List$1(JuiceboxEngine.Math.RectangleF)).ctor();
+
+                for (var i = 0; i < this.body.shapes.length; i = (i + 1) | 0) {
+                    var shape = ($t = this.body.shapes)[i];
+                    if (shape.type === 8) {
+                        var box = shape;
+                        rects.add(new JuiceboxEngine.Math.RectangleF.$ctor2(($t1 = box.position)[0], ($t2 = box.position)[1], box.width, box.height));
+                    }
+                }
+
+                return rects.ToArray();
             },
             StartCollision: function (other) {
                 this._collisions.add(other);

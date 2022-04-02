@@ -11,52 +11,19 @@
         },
         {
           "Type": "TileMap",
-          "Sprites": "Textures\\RuralVillageTerrain.png",
+          "Sprites": "Textures\\Kitchen.png",
           "MapData": "Levels\\Main-1.png",
           "TileSize": 16
         }
       ]
     },
     {
-      "Name": "Features",
+      "Name": "CameraPosition",
       "Components": [
         {
           "Type": "Transform",
-          "X": 0,
-          "Y": 0,
-          "Rotation": 0
-        },
-        {
-          "Type": "TileMap",
-          "Sprites": "Textures\\RuralVillageTerrain.png",
-          "MapData": "Levels\\Main-2.png",
-          "TileSize": 16
-        }
-      ]
-    },
-    {
-      "Name": "Collider",
-      "Components": [
-        {
-          "Type": "Transform",
-          "X": 0,
-          "Y": 116,
-          "Rotation": 0
-        },
-        {
-          "Type": "Collider",
-          "Width": 416,
-          "Height": 32
-        }
-      ]
-    },
-    {
-      "Name": "Player",
-      "Components": [
-        {
-          "Type": "Transform",
-          "X": 96,
-          "Y": 80,
+          "X": 480,
+          "Y": 48,
           "Rotation": 0
         }
       ]
