@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.8.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.9.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -5658,7 +5658,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 }
 
                 for (var i1 = 0; i1 < this.OnReleaseKeyboard.Keys.Count; i1 = (i1 + 1) | 0) {
-                    this.OnPressKeyboard.setItem(System.Linq.Enumerable.from(this.OnReleaseKeyboard, System.Collections.Generic.KeyValuePair$2(System.String,System.Boolean)).elementAt(i1).key, false);
+                    this.OnReleaseKeyboard.setItem(System.Linq.Enumerable.from(this.OnReleaseKeyboard, System.Collections.Generic.KeyValuePair$2(System.String,System.Boolean)).elementAt(i1).key, false);
                 }
 
                 this.AnyKeyPressed = false;
@@ -12324,6 +12324,10 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                 this._world = new (H5.virtualc("p2.World"))(config);
 
+                this._world.sleepMode = H5.virtualc("p2.World").BODY_SLEEPING;
+
+                this._world.defaultContactMaterial.friction = 0.8;
+
                 this._world.on("beginContact", H5.fn.bind(this, function () {
                     this.BeginContact(this._world.beginContactEvent.bodyA, this._world.beginContactEvent.bodyB);
                 }), null);
@@ -15744,7 +15748,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 var bodyP2 = this.CreateComonent(scene);
 
 
-                bodyP2.AddRectangle(new JuiceboxEngine.Math.RectangleF.$ctor2(0, 0, component.Width, component.Height));
+                bodyP2.AddRectangle(new JuiceboxEngine.Math.RectangleF.$ctor2(component.Width / 2, component.Height / 2, component.Width, component.Height));
 
                 return bodyP2;
             }
@@ -18074,6 +18078,78 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 }
             },
             /**
+             * Body position.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function Position
+             * @type JuiceboxEngine.Math.Vector2
+             */
+            Position: {
+                get: function () {
+                    var $t, $t1;
+                    return new JuiceboxEngine.Math.Vector2.$ctor3(($t = this.body.position)[0], ($t1 = this.body.position)[1]);
+                },
+                set: function (value) {
+                    var $t, $t1;
+                    ($t = this.body.position)[0] = value.X;
+                    ($t1 = this.body.position)[1] = value.Y;
+                }
+            },
+            /**
+             * Body rotation.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function Rotation
+             * @type number
+             */
+            Rotation: {
+                get: function () {
+                    return this.body.angle;
+                },
+                set: function (value) {
+                    this.body.angle = value;
+                }
+            },
+            /**
+             * Current sleep state of the object.
+             *
+             * @instance
+             * @public
+             * @readonly
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function Sleeping
+             * @type boolean
+             */
+            Sleeping: {
+                get: function () {
+                    return this.body.sleepState === H5.virtualc("p2.Body").SLEEPING;
+                }
+            },
+            /**
+             * Body velocity.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function Velocity
+             * @type JuiceboxEngine.Math.Vector2
+             */
+            Velocity: {
+                get: function () {
+                    var $t, $t1;
+                    return new JuiceboxEngine.Math.Vector2.$ctor3(($t = this.body.velocity)[0], ($t1 = this.body.velocity)[1]);
+                },
+                set: function (value) {
+                    var $t, $t1;
+                    ($t = this.body.velocity)[0] = value.X;
+                    ($t1 = this.body.velocity)[1] = value.Y;
+                }
+            },
+            /**
              * Make this body a trigger only.
              It will still fire collision events, but will move through other bodies.
              *
@@ -18206,6 +18282,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                 var circle = new (H5.virtualc("p2.Circle"))(options);
                 this.body.addShape(circle);
+                circle.position = System.Array.init([offset.X, offset.Y], System.Double);
             },
             /**
              * Add rectangle to the body.
@@ -18223,9 +18300,17 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 options.height = rect.Height;
 
                 var box = new (H5.virtualc("p2.Box"))(options);
-                box.position = System.Array.init([rect.X, rect.Y], System.Double);
-
                 this.body.addShape(box);
+
+                box.position = System.Array.init([rect.X, rect.Y], System.Double);
+            },
+            GetAABB: function () {
+                var aabb = this.body.getAABB();
+
+                var lower = new JuiceboxEngine.Math.Vector2.$ctor3(aabb.lowerBound[0], aabb.lowerBound[1]);
+                var upper = new JuiceboxEngine.Math.Vector2.$ctor3(aabb.upperBound[0], aabb.upperBound[1]);
+
+                return new JuiceboxEngine.Math.RectangleF.$ctor1(lower.$clone(), upper.X - lower.X, upper.Y - lower.Y);
             },
             GetRectangles: function () {
                 var $t, $t1, $t2;

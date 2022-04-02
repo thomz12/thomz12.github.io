@@ -5,6 +5,81 @@ H5.assemblyVersion("LD50","1.0.0.0");
 H5.assembly("LD50", function ($asm, globals) {
     "use strict";
 
+    H5.define("LD50.Circle", {
+        $kind: "struct",
+        statics: {
+            methods: {
+                getDefaultValue: function () { return new LD50.Circle(); }
+            }
+        },
+        fields: {
+            Center: null,
+            Radius: 0
+        },
+        ctors: {
+            init: function () {
+                this.Center = new JuiceboxEngine.Math.Vector2();
+            },
+            $ctor1: function (center, radius) {
+                this.$initialize();
+                this.Center = center.$clone();
+                this.Radius = radius;
+            },
+            ctor: function () {
+                this.$initialize();
+            }
+        },
+        methods: {
+            getHashCode: function () {
+                var h = H5.addHash([1668468399, this.Center, this.Radius]);
+                return h;
+            },
+            equals: function (o) {
+                if (!H5.is(o, LD50.Circle)) {
+                    return false;
+                }
+                return H5.equals(this.Center, o.Center) && H5.equals(this.Radius, o.Radius);
+            },
+            $clone: function (to) {
+                var s = to || new LD50.Circle();
+                s.Center = this.Center.$clone();
+                s.Radius = this.Radius;
+                return s;
+            }
+        }
+    });
+
+    H5.define("LD50.Dish", {
+        fields: {
+            Name: null,
+            Mass: 0,
+            SpriteOffset: null,
+            SourceRectangle: null,
+            BoundingBoxes: null,
+            Circles: null
+        },
+        ctors: {
+            init: function () {
+                this.SpriteOffset = new JuiceboxEngine.Math.Vector2();
+                this.SourceRectangle = new JuiceboxEngine.Math.Rectangle();
+            }
+        }
+    });
+
+    H5.define("LD50.Dishes", {
+        statics: {
+            fields: {
+                DishList: null
+            },
+            ctors: {
+                init: function () {
+                    var $t;
+                    this.DishList = System.Array.init([($t = new LD50.Dish(), $t.Name = "Plate", $t.Mass = 1.0, $t.SpriteOffset = new JuiceboxEngine.Math.Vector2.$ctor3(-8, -8), $t.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(0, 0, 16, 16), $t.BoundingBoxes = System.Array.init([], JuiceboxEngine.Math.RectangleF), $t.Circles = System.Array.init([new LD50.Circle.$ctor1(new JuiceboxEngine.Math.Vector2.$ctor3(0, 0), 8)], LD50.Circle), $t), ($t = new LD50.Dish(), $t.Name = "Pan", $t.Mass = 1.5, $t.SpriteOffset = new JuiceboxEngine.Math.Vector2.$ctor3(-14, -8), $t.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(16, 0, 28, 16), $t.BoundingBoxes = System.Array.init([new JuiceboxEngine.Math.RectangleF.$ctor2(6, 0, 12, 4)], JuiceboxEngine.Math.RectangleF), $t.Circles = System.Array.init([new LD50.Circle.$ctor1(new JuiceboxEngine.Math.Vector2.$ctor3(-6, 0), 8)], LD50.Circle), $t), ($t = new LD50.Dish(), $t.Name = "Fork", $t.Mass = 0.3, $t.SpriteOffset = new JuiceboxEngine.Math.Vector2.$ctor3(-3.0, -7.0), $t.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(48, 3, 6, 14), $t.BoundingBoxes = System.Array.init([new JuiceboxEngine.Math.RectangleF.$ctor2(0, 0, 5, 11)], JuiceboxEngine.Math.RectangleF), $t.Circles = System.Array.init([], LD50.Circle), $t), ($t = new LD50.Dish(), $t.Name = "Cup", $t.Mass = 0.5, $t.SpriteOffset = new JuiceboxEngine.Math.Vector2.$ctor3(-6, -5), $t.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(64, 6, 12, 10), $t.BoundingBoxes = System.Array.init([new JuiceboxEngine.Math.RectangleF.$ctor2(-1, 0, 10, 9)], JuiceboxEngine.Math.RectangleF), $t.Circles = System.Array.init([], LD50.Circle), $t)], LD50.Dish);
+                }
+            }
+        }
+    });
+
     /** @namespace LD50 */
 
     /**
@@ -15,6 +90,13 @@ H5.assembly("LD50", function ($asm, globals) {
      */
     H5.define("LD50.MainScene", {
         inherits: [JuiceboxEngine.Scene],
+        fields: {
+            _counter: null,
+            _dishes: null,
+            _aiming: false,
+            _aimingObject: null,
+            _dishMass: 0
+        },
         ctors: {
             /**
              * Scene constructor, not for any game setup.
@@ -30,8 +112,7 @@ H5.assembly("LD50", function ($asm, globals) {
             ctor: function (manager) {
                 this.$initialize();
                 JuiceboxEngine.Scene.ctor.call(this, manager);
-                var signin = new LD50.PlayfabSignin();
-                signin.AutoLogin();
+                this._dishes = new (System.Collections.Generic.List$1(JuiceboxEngine.GameObject)).ctor();
             }
         },
         methods: {
@@ -52,6 +133,9 @@ H5.assembly("LD50", function ($asm, globals) {
                 this.LoadLevel(this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/Main.json"));
 
                 this.DefaultCamera.Parent.Transform.Position2D = this.GetObjectByName("CameraPosition").Transform.Position2D.$clone();
+
+                this._counter = this.GetObjectByName("Counter");
+                this._aiming = true;
             },
             /**
              * Called every frame, before any gameobject updates.
@@ -64,7 +148,73 @@ H5.assembly("LD50", function ($asm, globals) {
              * @return  {void}
              */
             PreUpdate: function () {
+                if (this._aiming) {
+                    if (this._aimingObject == null) {
+                        this._aimingObject = this.CreateDish();
+                    }
 
+                    var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
+
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("a")) {
+                        body.Position = (JuiceboxEngine.Math.Vector2.op_Addition(body.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-64 * JuiceboxEngine.Util.Time.DeltaTime, 0)));
+                    }
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("d")) {
+                        body.Position = (JuiceboxEngine.Math.Vector2.op_Addition(body.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(64 * JuiceboxEngine.Util.Time.DeltaTime, 0)));
+                    }
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("r")) {
+                        body.Rotation += 6.2831855 * JuiceboxEngine.Util.Time.DeltaTime;
+                    }
+
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyUp(" ")) {
+                        body.Mass = this._dishMass;
+                        body.Velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, -20);
+
+                        this._aiming = false;
+                        this._dishMass = 0;
+                    }
+                } else {
+                    if (this._aimingObject != null) {
+                        if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping) {
+                            this._aiming = true;
+                            this._aimingObject = null;
+                        }
+                    }
+                }
+            },
+            CreateDish: function () {
+                var $t, $t1;
+                var dish = LD50.Dishes.DishList[JuiceboxEngine.Util.Random.NextRange(0, LD50.Dishes.DishList.length)];
+
+                var dishObj = this.AddGameObject$1(dish.Name);
+                dishObj.Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(this.DefaultCamera.Parent.Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Util.Random.NextRange(-8, 8), 64));
+
+                var sprite = dishObj.AddComponent(JuiceboxEngine.Sprite);
+                sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Dishes.png");
+                sprite.SourceRectangle = dish.SourceRectangle.$clone();
+                sprite.Offset = dish.SpriteOffset.$clone();
+
+                var body = dishObj.AddComponent(JuiceboxEngine.Physics.BodyP2);
+                body.Mass = 0;
+                this._dishMass = dish.Mass;
+
+                for (var i = 0; i < dish.Circles.length; i = (i + 1) | 0) {
+                    var circle = ($t = dish.Circles)[i].$clone();
+                    body.AddCircle(circle.Radius, circle.Center.$clone());
+                }
+
+                for (var i1 = 0; i1 < dish.BoundingBoxes.length; i1 = (i1 + 1) | 0) {
+                    var rect = ($t1 = dish.BoundingBoxes)[i1].$clone();
+                    body.AddRectangle(rect.$clone());
+                }
+
+                this._dishes.add(dishObj);
+
+                return dishObj;
+            },
+            DebugBodyShape: function (body) {
+                var rect = body.GetAABB();
+                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawRect(rect.$clone(), JuiceboxEngine.Math.Color.Red.$clone(), 1);
+                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawRectFilled(new JuiceboxEngine.Math.RectangleF.$ctor1(JuiceboxEngine.Math.Vector2.op_Subtraction(body.Parent.Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1)), 2, 2), JuiceboxEngine.Math.Color.Blue.$clone());
             },
             /**
              * Called every frame, after all gameobject had an update.
@@ -77,7 +227,22 @@ H5.assembly("LD50", function ($asm, globals) {
              * @return  {void}
              */
             LateUpdate: function () {
+                var $t;
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("h")) {
+                    this.DebugBodyShape(this._counter.GetComponent(JuiceboxEngine.Physics.BodyP2));
 
+                    $t = H5.getEnumerator(this._dishes);
+                    try {
+                        while ($t.moveNext()) {
+                            var dish = $t.Current;
+                            this.DebugBodyShape(dish.GetComponent(JuiceboxEngine.Physics.BodyP2));
+                        }
+                    } finally {
+                        if (H5.is($t, System.IDisposable)) {
+                            $t.System$IDisposable$Dispose();
+                        }
+                    }
+                }
             },
             /**
              * Called when the scene is about to be destroyed.

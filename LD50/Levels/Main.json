@@ -23,8 +23,120 @@
         {
           "Type": "Transform",
           "X": 480,
-          "Y": 48,
+          "Y": 64,
           "Rotation": 0
+        }
+      ]
+    },
+    {
+      "Name": "Counter",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 448,
+          "Y": 32,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 64,
+          "Height": 16
+        }
+      ]
+    },
+    {
+      "Name": "Lower-Collider",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 320,
+          "Y": 0,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 320,
+          "Height": 16
+        }
+      ]
+    },
+    {
+      "Name": "Left-Collider",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 304,
+          "Y": 0,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 8192
+        }
+      ]
+    },
+    {
+      "Name": "Right-Collider",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 640,
+          "Y": 0,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 8192
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 432,
+          "Y": 16,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 48
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 512,
+          "Y": 16,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 48
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 512,
+          "Y": 16,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 48
         }
       ]
     }
