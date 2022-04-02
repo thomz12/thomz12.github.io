@@ -34,13 +34,13 @@
         {
           "Type": "Transform",
           "X": 448,
-          "Y": 32,
+          "Y": 16,
           "Rotation": 0
         },
         {
           "Type": "Collider",
           "Width": 64,
-          "Height": 16
+          "Height": 32
         }
       ]
     },
@@ -104,7 +104,7 @@
         {
           "Type": "Collider",
           "Width": 16,
-          "Height": 48
+          "Height": 64
         }
       ]
     },
@@ -137,6 +137,22 @@
           "Type": "Collider",
           "Width": 16,
           "Height": 48
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 665,
+          "Y": -53.75,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 0.25,
+          "Height": 0.25
         }
       ]
     }
