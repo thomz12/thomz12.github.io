@@ -272,6 +272,7 @@ H5.assembly("LD50", function ($asm, globals) {
             _highestPoint: 0,
             _curHeight: 0,
             _aiming: false,
+            _moving: false,
             _aimingObject: null,
             _dishMass: 0,
             _scoreText: null
@@ -341,21 +342,22 @@ H5.assembly("LD50", function ($asm, globals) {
                     var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
                     body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(body.Position.X, this.DefaultCamera.Parent.Transform.Position2D.Y + 48);
 
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("a")) {
-                        body.Position = (JuiceboxEngine.Math.Vector2.op_Addition(body.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-64 * JuiceboxEngine.Util.Time.DeltaTime, 0)));
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse) && JuiceboxEngine.Input.InputManager.Instance.MousePosition.Y > 0.4 || this._moving) {
+                        var world = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
+                        body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(world.X, body.Position.Y);
+                        this._moving = true;
                     }
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("d")) {
-                        body.Position = (JuiceboxEngine.Math.Vector2.op_Addition(body.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(64 * JuiceboxEngine.Util.Time.DeltaTime, 0)));
-                    }
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("r")) {
+
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld(" ") || (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse) && JuiceboxEngine.Input.InputManager.Instance.MousePosition.Y < 0.2)) {
                         body.Rotation += 6.2831855 * JuiceboxEngine.Util.Time.DeltaTime;
                     }
 
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyUp(" ")) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyUp(JuiceboxEngine.Input.MouseKey.LeftMouse) && this._moving) {
                         body.Mass = this._dishMass;
                         body.Velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, -20);
 
                         this._aiming = false;
+                        this._moving = false;
                         this._dishMass = 0;
                     }
                 } else {
