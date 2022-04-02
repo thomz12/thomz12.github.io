@@ -155,6 +155,22 @@
           "Height": 0.25
         }
       ]
+    },
+    {
+      "Name": "Spicerack",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 496,
+          "Y": 80,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 16
+        }
+      ]
     }
   ]
 }
