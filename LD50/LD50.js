@@ -662,7 +662,7 @@ H5.assembly("LD50", function ($asm, globals) {
                         }
                     } else {
                         if (this._aimingObject != null) {
-                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping || (this._falltimer > 10.0 && this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Velocity.Length() < 1.0)) {
+                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping || (this._falltimer > 10.0 && this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Velocity.Length() < 10.0)) {
                                 this._aiming = true;
                                 this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Type = 2;
                                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.SecureObject(this._aimingObject));
