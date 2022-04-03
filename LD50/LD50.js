@@ -375,7 +375,7 @@ H5.assembly("LD50", function ($asm, globals) {
 
                     var lastHeight = 0;
 
-                    for (var i1 = 0; i1 < leaderboardTask.Leaderboard.Entries.Count; i1 = (i1 + 1) | 0) {
+                    for (var i1 = (leaderboardTask.Leaderboard.Entries.Count - 1) | 0; i1 >= 0; i1 = (i1 - 1) | 0) {
                         var entry = leaderboardTask.Leaderboard.Entries.getItem(i1).$clone();
                         var height = entry.value / 10.0;
 
