@@ -239,9 +239,63 @@ H5.assembly("LD50", function ($asm, globals) {
                     this.PANEL_TEXTURE_PATH = "JuiceUI/Panel.png";
                     this.PANEL_BORDER_WIDTH = 5;
                     this.PANEL_OFFSET = 2.0;
-                    this.PANEL_FRONT = new JuiceboxEngine.Math.Color.$ctor2(252, 163, 17, 255);
-                    this.PANEL_BACK = new JuiceboxEngine.Math.Color.$ctor2(43, 44, 40, 255);
+                    this.PANEL_FRONT = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                    this.PANEL_BACK = new JuiceboxEngine.Math.Color.$ctor2(118, 66, 138, 255);
                 }
+            }
+        }
+    });
+
+    H5.define("LD50.MainMenu", {
+        inherits: [JuiceboxEngine.Scene],
+        fields: {
+            _logo: null,
+            _background: null
+        },
+        ctors: {
+            ctor: function (manager) {
+                this.$initialize();
+                JuiceboxEngine.Scene.ctor.call(this, manager);
+
+            }
+        },
+        methods: {
+            InitializeScene: function () {
+                this._background = this.AddGameObject$1("background");
+
+                var map = this._background.AddComponent(JuiceboxEngine.TileMap);
+                map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/background.png");
+                map.TileSize = 32;
+                map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
+                map.Parallax = 0.9;
+
+                this.DefaultCamera.Zoom = 4;
+
+                this._logo = this.AddGameObject$1("logo");
+                this._logo.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 32);
+
+                var sprite = this._logo.AddComponent(JuiceboxEngine.Sprite);
+                sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/icon.png");
+                sprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-sprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-sprite.Texture.Height) | 0), 2)) | 0));
+
+                var button = new LD50.JuiceUI.JuiceUIButton(this.GUI.Root);
+                button.SetText("Play", true);
+                button.addOnPress(H5.fn.cacheBind(this, this.PlayGame));
+                button.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 50);
+                button.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                button.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+            },
+            PlayGame: function () {
+                this.SceneManager.SwitchToScene(new LD50.MainScene(this.ResourceManager));
+            },
+            PreUpdate: function () {
+                this._logo.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * JuiceboxEngine.Math.JMath.PI / 16;
+            },
+            LateUpdate: function () {
+
+            },
+            FinalizeScene: function () {
+
             }
         }
     });
@@ -840,7 +894,7 @@ H5.assembly("LD50", function ($asm, globals) {
         main: function Main () {
             var game = new JuiceboxEngine.JuiceboxGame();
 
-            game.Run(new LD50.MainScene(game.ResourceManager));
+            game.Run(new LD50.MainMenu(game.ResourceManager));
         }
     });
 

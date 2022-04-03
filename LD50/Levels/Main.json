@@ -119,7 +119,7 @@
         },
         {
           "Type": "Collider",
-          "Width": 16,
+          "Width": 32,
           "Height": 48
         }
       ]
