@@ -449,7 +449,8 @@ H5.assembly("LD50", function ($asm, globals) {
             _leaderboardText: null,
             _camXTarget: 0,
             _gameoverObj: null,
-            _falltimer: 0
+            _falltimer: 0,
+            _pressToReturn: false
         },
         ctors: {
             /**
@@ -608,13 +609,19 @@ H5.assembly("LD50", function ($asm, globals) {
                         }
                     } else {
                         if (this._aimingObject != null) {
-                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping || this._falltimer > 10.0) {
+                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping || (this._falltimer > 10.0 && this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Velocity.Length() < 1.0)) {
                                 this._aiming = true;
                                 this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Type = 2;
                                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.SecureObject(this._aimingObject));
 
                                 this._aimingObject = null;
                             }
+                        }
+                    }
+                } else {
+                    if (this._pressToReturn) {
+                        if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyUp(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                            this.SceneManager.SwitchToScene(new LD50.MainMenu(this.ResourceManager));
                         }
                     }
                 }
@@ -766,6 +773,9 @@ H5.assembly("LD50", function ($asm, globals) {
                     $rv,
                     gameoverSprite,
                     offset,
+                    scoreText,
+                    rankText,
+                    returnText,
                     $ae;
 
                 var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
@@ -785,6 +795,37 @@ H5.assembly("LD50", function ($asm, globals) {
                                             gameoverSprite.Size = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuarticEaseOut(1.0 - x)));
                                         }));
 
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.5);
+                                        $s = 2;
+                                        return true;
+                                }
+                                case 2: {
+                                    this._pressToReturn = true;
+
+                                        scoreText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                                        scoreText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                                        scoreText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                                        scoreText.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        scoreText.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        scoreText.DisplayText = System.String.format("Your score: {0}", [H5.Int.clip32(((this._highestPoint - LD50.MainScene.MIN_DIST) * 10)) / 10.0]);
+                                        scoreText.ResizeToText(48);
+
+                                        rankText = new JuiceboxEngine.GUI.Text(scoreText);
+                                        rankText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                                        rankText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                                        rankText.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        rankText.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                                        rankText.DisplayText = System.String.format("Rank: {0}", [this.GetRank(this._highestPoint - LD50.MainScene.MIN_DIST)]);
+                                        rankText.ResizeToText(48);
+
+                                        returnText = new JuiceboxEngine.GUI.Text(rankText);
+                                        returnText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                                        returnText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                                        returnText.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        returnText.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                                        returnText.DisplayText = System.String.format("Press to continue", null);
+                                        returnText.ResizeToText(48);
+
                                 }
                                 default: {
                                     return false;
@@ -797,6 +838,25 @@ H5.assembly("LD50", function ($asm, globals) {
                     }
                 }));
                 return $en;
+            },
+            GetRank: function (score) {
+                if (score < 50) {
+                    return "D";
+                } else {
+                    if (score < 100) {
+                        return "C";
+                    } else {
+                        if (score < 150) {
+                            return "B";
+                        } else {
+                            if (score < 200) {
+                                return "A";
+                            } else {
+                                return "S";
+                            }
+                        }
+                    }
+                }
             },
             DebugBodyShape: function (body) {
                 var rect = body.GetAABB();
