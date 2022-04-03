@@ -4,5 +4,6 @@ Textures/Kitchen.png
 Textures/Dishes.png
 Textures/background.png
 Textures/icon.png
+Textures/Play.png
 Audio/background_music.mp3
 Audio/background_mainmenu.mp3

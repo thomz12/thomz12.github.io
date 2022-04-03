@@ -250,7 +250,10 @@ H5.assembly("LD50", function ($asm, globals) {
         inherits: [JuiceboxEngine.Scene],
         fields: {
             _logo: null,
-            _background: null
+            _play: null,
+            _background: null,
+            _playfabText: null,
+            username: null
         },
         ctors: {
             ctor: function (manager) {
@@ -263,6 +266,12 @@ H5.assembly("LD50", function ($asm, globals) {
             InitializeScene: function () {
                 this._background = this.AddGameObject$1("background");
 
+                this._background = this.AddGameObject$1("background");
+                var music = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                music.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Audio/background_mainmenu.mp3"));
+                music.Play();
+                music.Loop(true);
+
                 var map = this._background.AddComponent(JuiceboxEngine.TileMap);
                 map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/background.png");
                 map.TileSize = 32;
@@ -271,25 +280,99 @@ H5.assembly("LD50", function ($asm, globals) {
 
                 this.DefaultCamera.Zoom = 4;
 
-                this._logo = this.AddGameObject$1("logo");
+                this._logo = this.AddGameObject$1("Logo");
                 this._logo.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 32);
+
+                var text = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                text.DisplayText = "2022 - Created by Mathijs Koning and Thom Zeilstra";
+                text.ResizeToText(16);
+                text.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                text.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                text.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(1, -1);
+
+                this._playfabText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                this._playfabText.DisplayText = "Signing you in...";
+                this._playfabText.ResizeToText(16);
+                this._playfabText.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+                this._playfabText.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+                this._playfabText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(1, -1);
 
                 var sprite = this._logo.AddComponent(JuiceboxEngine.Sprite);
                 sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/icon.png");
                 sprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-sprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-sprite.Texture.Height) | 0), 2)) | 0));
+                sprite.Size = JuiceboxEngine.Math.Vector2.op_Multiply$1(sprite.Size.$clone(), 1.4);
 
-                var button = new LD50.JuiceUI.JuiceUIButton(this.GUI.Root);
-                button.SetText("Play", true);
-                button.addOnPress(H5.fn.cacheBind(this, this.PlayGame));
-                button.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 50);
-                button.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                button.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._play = this.AddGameObject$1("Play");
+                this._play.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -16);
+                sprite = this._play.AddComponent(JuiceboxEngine.Sprite);
+                sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Play.png");
+                sprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(((H5.Int.div(((-sprite.Texture.Width) | 0), 2)) | 0), ((H5.Int.div(((-sprite.Texture.Height) | 0), 2)) | 0));
+
+                var element = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                element.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 100);
+                element.ShowDebugBounds = true;
+                element.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                element.addOnMouseEnter(H5.fn.cacheBind(this, this.MouseEnterStart));
+                element.addOnMouseExit(H5.fn.cacheBind(this, this.MouseExitStart));
+                element.addOnMouseUp(H5.fn.cacheBind(this, this.PlayGame));
+
+                var ui = this._play.AddComponent(JuiceboxEngine.UIComponent);
+                ui.Setup(element, this);
+
+                var signin = new LD50.PlayfabSignin();
+                signin.AutoLogin();
+                signin.addOnStateChange(H5.fn.cacheBind(this, this.LoginChange));
             },
-            PlayGame: function () {
+            LoginChange: function (state) {
+                if (state === LD50.PlayfabSignin.LoginState.SIGNED_IN) {
+                    this._playfabText.DisplayText = "Signed in!";
+
+                    var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayName(JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId);
+                    task.addOnTaskCompleted(H5.fn.cacheBind(this, this.GotUsername));
+                } else if (state === LD50.PlayfabSignin.LoginState.REGISTERING) {
+                    this._playfabText.DisplayText = "Registering...";
+                } else if (state === LD50.PlayfabSignin.LoginState.ERROR) {
+                    this._playfabText.DisplayText = "Error signing you in...";
+                }
+            },
+            GotUsername: function (task) {
+                if (task.Success) {
+                    this.username = task.Response.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+                    this._playfabText.DisplayText = System.String.format("Signed in! Welcome, {0}", [this.username]);
+                    this._playfabText.ResizeToText(16);
+                }
+            },
+            MouseExitStart: function (ev) {
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                    this._play.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.2, 0.2), JuiceboxEngine.Math.Easings.QuadraticEaseOut(1.0 - x)));
+                })));
+            },
+            MouseEnterStart: function (ev) {
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                    this._play.GetComponent(JuiceboxEngine.Sprite).Size = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.2, 0.2), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x)));
+                })));
+            },
+            PlayGame: function (ev) {
+                if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
+                    if (JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayNameTask.Finished) {
+                        if (JuiceboxEngine.Playfab.PlayfabManager.Identity.Username == null) {
+                            this.AskUsername();
+                        }
+                    }
+                }
+
                 this.SceneManager.SwitchToScene(new LD50.MainScene(this.ResourceManager));
             },
+            AskUsername: function () {
+                var username = JuiceboxEngine.Util.Browser.Prompt("Username for leaderboards:", System.String.format("Cleaner #{0}", [JuiceboxEngine.Util.Random.NextRange(1000, 10000)]));
+                JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+            },
             PreUpdate: function () {
-                this._logo.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * JuiceboxEngine.Math.JMath.PI / 16;
+                this._logo.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(2 * JuiceboxEngine.Util.Time.TotalSeconds) * JuiceboxEngine.Math.JMath.PI / 16;
+                this._play.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + JuiceboxEngine.Math.JMath.PI) * JuiceboxEngine.Math.JMath.PI / 32;
+
+                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(8, 8), JuiceboxEngine.Util.Time.DeltaTime));
             },
             LateUpdate: function () {
 
@@ -353,18 +436,9 @@ H5.assembly("LD50", function ($asm, globals) {
                 JuiceboxEngine.Scene.ctor.call(this, manager);
                 this._dishes = new (System.Collections.Generic.List$1(JuiceboxEngine.Physics.BodyP2)).ctor();
                 this._leaderboardText = new (System.Collections.Generic.List$1(JuiceboxEngine.GUI.Text)).ctor();
-
-                var signin = new LD50.PlayfabSignin();
-                signin.AutoLogin();
-                signin.addOnStateChange(H5.fn.cacheBind(this, this.LoginChange));
             }
         },
         methods: {
-            LoginChange: function (state) {
-                if (state === LD50.PlayfabSignin.LoginState.SIGNED_IN) {
-                    this.GetLeaderboard();
-                }
-            },
             /**
              * Initialize the scene. Game objects can be accessed and created here.
              *
@@ -382,6 +456,7 @@ H5.assembly("LD50", function ($asm, globals) {
                 this._background = this.AddGameObject$1("background");
                 var music = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
                 music.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Audio/background_music.mp3"));
+                music.Play();
                 music.Loop(true);
 
                 var map = this._background.AddComponent(JuiceboxEngine.TileMap);
@@ -389,7 +464,6 @@ H5.assembly("LD50", function ($asm, globals) {
                 map.TileSize = 32;
                 map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
                 map.Parallax = 0.9;
-
 
                 this.LoadLevel(this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/Main.json"));
 
@@ -675,6 +749,8 @@ H5.assembly("LD50", function ($asm, globals) {
                     this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(camPos.X, this._aimingObject.Transform.Position2D.X, 2.0 * JuiceboxEngine.Util.Time.DeltaTime), JuiceboxEngine.Math.JMath.Interpolate(camPos.Y, this._aimingObject.Transform.Position2D.Y, 2.0 * JuiceboxEngine.Util.Time.DeltaTime));
                 }
 
+                this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, JuiceboxEngine.Math.JMath.Clamp$1(this.DefaultCamera.Parent.Transform.Position2D.Y, this.DefaultCamera.Frustum.Height / 2, 4000000.0));
+
                 if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("h")) {
                     this.DebugBodyShape(this._counter.GetComponent(JuiceboxEngine.Physics.BodyP2));
 
@@ -692,6 +768,10 @@ H5.assembly("LD50", function ($asm, globals) {
                 }
             },
             DrawLine: function (height, text) {
+                if (height <= LD50.MainScene.MIN_DIST) {
+                    return;
+                }
+
                 JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X - 100, height), new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X + 100, height), new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 128), 1);
                 text.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.75, this.DefaultCamera.WorldToScreenPoint(new JuiceboxEngine.Math.Vector2.$ctor3(0, height)).Y);
             },
