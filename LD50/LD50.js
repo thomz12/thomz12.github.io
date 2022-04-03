@@ -349,15 +349,23 @@ H5.assembly("LD50", function ($asm, globals) {
                 }
             },
             GotLeaderboard: function (task) {
+                var title = new JuiceboxEngine.GUI.Text(this._leaderboardUI.UIElement);
+                title.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
+                title.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                title.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                title.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                title.DisplayText = (title.DisplayText || "") + (System.String.format("Leaderboard (scroll!)", null) || "");
+                title.ResizeToText(32);
+
                 for (var i = 0; i < task.Leaderboard.Entries.Count; i = (i + 1) | 0) {
                     var entry = task.Leaderboard.Entries.getItem(i).$clone();
 
-                    var text = new JuiceboxEngine.GUI.Text(this._leaderboardUI.UIElement);
+                    var text = new JuiceboxEngine.GUI.Text(title);
                     text.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, H5.Int.mul(-32, i));
                     text.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
                     text.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
                     text.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
-                    text.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                    text.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
                     text.DisplayText = (text.DisplayText || "") + (System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, (entry.value / 10.0)) || "");
 
                     if (H5.referenceEquals(entry.playfabId, JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId)) {
