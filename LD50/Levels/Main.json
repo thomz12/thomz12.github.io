@@ -109,18 +109,18 @@
       ]
     },
     {
-      "Name": "Side",
+      "Name": "",
       "Components": [
         {
           "Type": "Transform",
           "X": 512,
-          "Y": 16,
+          "Y": 48,
           "Rotation": 0
         },
         {
           "Type": "Collider",
-          "Width": 32,
-          "Height": 48
+          "Width": 25,
+          "Height": 12
         }
       ]
     }
