@@ -627,6 +627,7 @@ H5.assembly("LD50", function ($asm, globals) {
              */
             PreUpdate: function () {
                 this.cooldown += JuiceboxEngine.Util.Time.DeltaTime;
+                this._falltimer += JuiceboxEngine.Util.Time.DeltaTime;
 
                 if (!this._gameover) {
                     if (this._leaderboardEntries != null) {
