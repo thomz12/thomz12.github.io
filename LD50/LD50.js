@@ -381,10 +381,12 @@ H5.assembly("LD50", function ($asm, globals) {
                 try {
                     var defaultname = System.String.format("Washer #{0}", [JuiceboxEngine.Util.Random.NextRange(1000, 10000)]);
 
-                    var username = JuiceboxEngine.Util.Browser.Prompt(task == null ? "Username for leaderboards:" : "Error, please try a different name:", defaultname);
-                    if (username == null) {
-                        username = defaultname;
+                    var playerName = JuiceboxEngine.Util.Browser.Prompt(task == null ? "Username for leaderboards:" : "Error, please try a different name:", defaultname);
+                    if (playerName == null) {
+                        playerName = defaultname;
                     }
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(playerName).addOnTaskCompleted(H5.fn.cacheBind(this, this.AskUsername));
                 } catch ($e1) {
                     $e1 = System.Exception.create($e1);
                     System.Console.WriteLine("Can't ask username...");
@@ -395,8 +397,6 @@ H5.assembly("LD50", function ($asm, globals) {
 
                     return;
                 }
-
-                JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(this.username).addOnTaskCompleted(H5.fn.cacheBind(this, this.AskUsername));
             },
             PreUpdate: function () {
                 this._logo.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(2 * JuiceboxEngine.Util.Time.TotalSeconds) * JuiceboxEngine.Math.JMath.PI / 16;
