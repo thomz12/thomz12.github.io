@@ -411,8 +411,11 @@ H5.assembly("LD50", function ($asm, globals) {
             },
             AskUsername: function (task) {
                 if (task != null) {
-                    if (task.Success && this._pressedPlay) {
-                        this.SceneManager.SwitchToScene(new LD50.MainScene(this.ResourceManager));
+                    if (task.Success) {
+                        if (this._pressedPlay) {
+                            this.SceneManager.SwitchToScene(new LD50.MainScene(this.ResourceManager));
+                        }
+
                         return;
                     }
                 }
