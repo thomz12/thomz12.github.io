@@ -123,6 +123,102 @@
           "Height": 12
         }
       ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 434,
+          "Y": 95.82088,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 11.8182,
+          "Height": 14.9091
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 512.043,
+          "Y": 80.04696,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 15.913,
+          "Height": 14.913
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 512.022,
+          "Y": 128.02438,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 15.9556,
+          "Height": 14.9556
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 432.022,
+          "Y": 160.0222,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 15.9778,
+          "Height": 14.9778
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 512,
+          "Y": 176,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 16
+        }
+      ]
+    },
+    {
+      "Name": "",
+      "Components": [
+        {
+          "Type": "Transform",
+          "X": 432,
+          "Y": 208,
+          "Rotation": 0
+        },
+        {
+          "Type": "Collider",
+          "Width": 16,
+          "Height": 48
+        }
+      ]
     }
   ]
 }
