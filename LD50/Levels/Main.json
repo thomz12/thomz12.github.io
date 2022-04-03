@@ -39,7 +39,7 @@
         },
         {
           "Type": "Collider",
-          "Width": 64,
+          "Width": 80,
           "Height": 32
         }
       ]
@@ -113,7 +113,7 @@
       "Components": [
         {
           "Type": "Transform",
-          "X": 512,
+          "X": 496,
           "Y": 48,
           "Rotation": 0
         },

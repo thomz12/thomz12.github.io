@@ -571,15 +571,12 @@ H5.assembly("LD50", function ($asm, globals) {
                     var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
                     body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(body.Position.X, this._curHeight + 48);
 
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse) && JuiceboxEngine.Input.InputManager.Instance.MousePosition.Y > 0.4 || this._moving) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
                         var world = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
                         body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(world.X, body.Position.Y);
                         this._moving = true;
                     }
 
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld(" ") || (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse) && JuiceboxEngine.Input.InputManager.Instance.MousePosition.Y < 0.2)) {
-                        body.Rotation += 6.2831855 * JuiceboxEngine.Util.Time.DeltaTime;
-                    }
 
                     if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyUp(JuiceboxEngine.Input.MouseKey.LeftMouse) && this._moving) {
                         body.Mass = this._dishMass;
@@ -789,7 +786,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     return;
                 }
 
-                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X - 100, height), new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X + 100, height), isGuestScore ? new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 64) : new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 128), 1);
+                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X - 100, height), new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X + 100, height), isGuestScore ? new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 64) : new JuiceboxEngine.Math.Color.$ctor2(255, 0, 0, 128), 1);
                 text.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(isGuestScore ? 0.1 : 0.75, this.DefaultCamera.WorldToScreenPoint(new JuiceboxEngine.Math.Vector2.$ctor3(0, height)).Y);
             },
             GetHighestPoint: function () {
