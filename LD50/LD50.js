@@ -403,6 +403,10 @@ H5.assembly("LD50", function ($asm, globals) {
                 this._play.Transform.Rotation2D = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds + JuiceboxEngine.Math.JMath.PI) * JuiceboxEngine.Math.JMath.PI / 32;
 
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(8, 8), JuiceboxEngine.Util.Time.DeltaTime));
+
+                if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                    this.DefaultCamera.Parent.Transform.Translate2D(new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Input.InputManager.Instance.MouseDelta.Y));
+                }
             },
             LateUpdate: function () {
 
@@ -450,9 +454,13 @@ H5.assembly("LD50", function ($asm, globals) {
             _camXTarget: 0,
             _gameoverObj: null,
             _falltimer: 0,
-            _pressToReturn: false
+            _pressToReturn: false,
+            cooldown: 0
         },
         ctors: {
+            init: function () {
+                this.cooldown = 0.0;
+            },
             /**
              * Scene constructor, not for any game setup.
              Use {@link } instead.
@@ -572,6 +580,8 @@ H5.assembly("LD50", function ($asm, globals) {
              * @return  {void}
              */
             PreUpdate: function () {
+                this.cooldown += JuiceboxEngine.Util.Time.DeltaTime;
+
                 if (!this._gameover) {
                     if (this._leaderboardEntries != null) {
                         for (var i = 0; i < this._leaderboardEntries.Count; i = (i + 1) | 0) {
@@ -700,6 +710,48 @@ H5.assembly("LD50", function ($asm, globals) {
             },
             BodyCollision: function (OtherBody) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Collide(OtherBody.Parent));
+
+                if (this.cooldown > 0.25) {
+                    this.cooldown = 0;
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAudio(System.String.format("Audio/Hit{0}.mp3", [JuiceboxEngine.Util.Random.NextRange(1, 7)])));
+                }
+            },
+            PlayAudio: function (name) {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    audio,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    audio = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                                        audio.SetAudioClip(this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, name));
+                                        audio.Play();
+                                        audio.SetVolume(0.5);
+
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(1.0);
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    this._background.RemoveComponent(audio);
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
             },
             Collide: function (obj) {
                 var $s = 0,
@@ -803,6 +855,7 @@ H5.assembly("LD50", function ($asm, globals) {
                                     this._pressToReturn = true;
 
                                         scoreText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
+                                        scoreText.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -96);
                                         scoreText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
                                         scoreText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
                                         scoreText.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();

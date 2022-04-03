@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.12.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.13.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -12386,8 +12386,14 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Update: function () {
-                this._world.step(JuiceboxEngine.Util.Time.DeltaTime);
-                this._world.step(JuiceboxEngine.Util.Time.DeltaTime);
+                var timestep = JuiceboxEngine.Util.Time.DeltaTime;
+
+                if (timestep > 0.016666668) {
+                    timestep = 0.016666668;
+                }
+
+                this._world.step(timestep);
+                this._world.step(timestep);
             }
         }
     });
@@ -18251,6 +18257,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.HasWorld = false;
 
                 this.body.bodyp2 = this;
+                this.body.angularDamping = 0.5;
             }
         },
         methods: {

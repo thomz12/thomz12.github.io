@@ -1,4 +1,4 @@
-H5.assemblyVersion("JuiceboxEngine","0.2.12.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.13.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
