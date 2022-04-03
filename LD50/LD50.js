@@ -448,7 +448,8 @@ H5.assembly("LD50", function ($asm, globals) {
             _leaderboardEntries: null,
             _leaderboardText: null,
             _camXTarget: 0,
-            _gameoverObj: null
+            _gameoverObj: null,
+            _falltimer: 0
         },
         ctors: {
             /**
@@ -599,13 +600,15 @@ H5.assembly("LD50", function ($asm, globals) {
                             body.Mass = this._dishMass;
                             body.Velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, -20);
 
+                            this._falltimer = 0.0;
+
                             this._aiming = false;
                             this._moving = false;
                             this._dishMass = 0;
                         }
                     } else {
                         if (this._aimingObject != null) {
-                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping) {
+                            if (this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Sleeping || this._falltimer > 10.0) {
                                 this._aiming = true;
                                 this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2).Type = 2;
                                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.SecureObject(this._aimingObject));
