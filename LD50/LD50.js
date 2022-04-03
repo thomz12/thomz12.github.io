@@ -356,6 +356,7 @@ H5.assembly("LD50", function ($asm, globals) {
                 title.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 title.DisplayText = (title.DisplayText || "") + (System.String.format("Leaderboard (scroll!)", null) || "");
                 title.ResizeToText(32);
+                title.Color = new JuiceboxEngine.Math.Color.$ctor2(210, 210, 210, 255);
 
                 for (var i = 0; i < task.Leaderboard.Entries.Count; i = (i + 1) | 0) {
                     var entry = task.Leaderboard.Entries.getItem(i).$clone();
@@ -583,9 +584,9 @@ H5.assembly("LD50", function ($asm, globals) {
 
                     this._leaderboardEntries = new (System.Collections.Generic.List$1(JuiceboxEngine.Playfab.LeaderboardEntry)).ctor();
 
-                    var lastHeight = 0;
+                    var lastHeight = Number.POSITIVE_INFINITY;
 
-                    for (var i1 = (leaderboardTask.Leaderboard.Entries.Count - 1) | 0; i1 >= 0; i1 = (i1 - 1) | 0) {
+                    for (var i1 = 0; i1 < leaderboardTask.Leaderboard.Entries.Count; i1 = (i1 + 1) | 0) {
                         var entry = leaderboardTask.Leaderboard.Entries.getItem(i1).$clone();
                         var height = entry.value / 10.0;
 
@@ -593,7 +594,7 @@ H5.assembly("LD50", function ($asm, globals) {
                             continue;
                         }
 
-                        if (height - lastHeight > 16) {
+                        if (lastHeight - height > 16) {
                             var newText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
 
                             newText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
@@ -639,7 +640,7 @@ H5.assembly("LD50", function ($asm, globals) {
                         }
 
                         var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
-                        body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(body.Position.X, this._curHeight + 48);
+                        body.Position = new JuiceboxEngine.Math.Vector2.$ctor3(body.Position.X, this._highestPoint + 48);
 
                         if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
                             var world = this.DefaultCamera.ScreenPointToWorld(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone());
