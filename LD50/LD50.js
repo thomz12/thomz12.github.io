@@ -254,7 +254,8 @@ H5.assembly("LD50", function ($asm, globals) {
             _background: null,
             _playfabText: null,
             username: null,
-            _pressedPlay: false
+            _pressedPlay: false,
+            _leaderboardUI: null
         },
         ctors: {
             ctor: function (manager) {
@@ -326,6 +327,11 @@ H5.assembly("LD50", function ($asm, globals) {
                 var signin = new LD50.PlayfabSignin();
                 signin.AutoLogin();
                 signin.addOnStateChange(H5.fn.cacheBind(this, this.LoginChange));
+
+                var leaderboardText = this.AddGameObject$1("lb_text");
+                leaderboardText.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, -48);
+                this._leaderboardUI = leaderboardText.AddComponent(JuiceboxEngine.UIComponent);
+                this._leaderboardUI.Setup(new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root), this);
             },
             LoginChange: function (state) {
                 if (state === LD50.PlayfabSignin.LoginState.SIGNED_IN) {
@@ -333,10 +339,33 @@ H5.assembly("LD50", function ($asm, globals) {
 
                     var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayName(JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId);
                     task.addOnTaskCompleted(H5.fn.cacheBind(this, this.GotUsername));
+
+                    var leaderboarTask = JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard("highscores", 0, 100);
+                    leaderboarTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
                 } else if (state === LD50.PlayfabSignin.LoginState.REGISTERING) {
                     this._playfabText.DisplayText = "Registering...";
                 } else if (state === LD50.PlayfabSignin.LoginState.ERROR) {
                     this._playfabText.DisplayText = "Error signing you in...";
+                }
+            },
+            GotLeaderboard: function (task) {
+                for (var i = 0; i < task.Leaderboard.Entries.Count; i = (i + 1) | 0) {
+                    var entry = task.Leaderboard.Entries.getItem(i).$clone();
+
+                    var text = new JuiceboxEngine.GUI.Text(this._leaderboardUI.UIElement);
+                    text.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, H5.Int.mul(-32, i));
+                    text.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
+                    text.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                    text.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                    text.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                    text.DisplayText = (text.DisplayText || "") + (System.String.format("{0}. {1} - {2}", entry.position, entry.displayName, (entry.value / 10.0)) || "");
+
+                    if (H5.referenceEquals(entry.playfabId, JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId)) {
+                        text.DisplayText = (text.DisplayText || "") + " - YOU!";
+                        text.Color = JuiceboxEngine.Math.Color.Green.$clone();
+                    }
+
+                    text.ResizeToText(32);
                 }
             },
             GotUsername: function (task) {
@@ -405,7 +434,11 @@ H5.assembly("LD50", function ($asm, globals) {
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(8, 8), JuiceboxEngine.Util.Time.DeltaTime));
 
                 if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
-                    this.DefaultCamera.Parent.Transform.Translate2D(new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Input.InputManager.Instance.MouseDelta.Y));
+                    this.DefaultCamera.Parent.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Division$1((JuiceboxEngine.Math.Vector2.op_Multiply(JuiceboxEngine.Input.InputManager.Instance.MouseDelta.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Graphics.GraphicsManager.Instance.Height))), this.DefaultCamera.Zoom));
+
+                    if (this.DefaultCamera.Parent.Transform.Position2D.Y > 0) {
+                        this.DefaultCamera.Parent.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X, 0);
+                    }
                 }
             },
             LateUpdate: function () {
