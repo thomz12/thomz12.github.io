@@ -528,7 +528,7 @@ H5.assembly("LD50", function ($asm, globals) {
                             var newText = new JuiceboxEngine.GUI.Text(this.GUI.Root);
 
                             newText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_32_PATH);
-                            newText.DisplayText = entry.displayName;
+                            newText.DisplayText = System.String.format("{0}\n{1}", entry.displayName, height);
                             newText.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(2000, 32);
                             newText.Pivot = new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 0.0);
                             newText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(1, -1);
@@ -558,7 +558,7 @@ H5.assembly("LD50", function ($asm, globals) {
                         var height = (entry.value / 10.0) + LD50.MainScene.MIN_DIST;
 
                         if (JuiceboxEngine.Math.JMath.Abs(this._curHeight + height) > 24) {
-                            this.DrawLine(height, this._leaderboardText.getItem(i));
+                            this.DrawLine(height, this._leaderboardText.getItem(i), true);
                         }
                     }
                 }
@@ -756,7 +756,7 @@ H5.assembly("LD50", function ($asm, globals) {
 
                 this._scoreText.DisplayText = System.Single.format((JuiceboxEngine.Math.JMath.Round((interpolatedHeight - LD50.MainScene.MIN_DIST) * 10) / 10));
 
-                this.DrawLine(interpolatedHeight, this._scoreText);
+                this.DrawLine(interpolatedHeight, this._scoreText, false);
 
                 if (this._aimingObject == null || this._aimingObject.Transform.Position2D.Y > this._curHeight) {
                     if (this._highestPoint - this._curHeight < 1.0) {
@@ -784,13 +784,13 @@ H5.assembly("LD50", function ($asm, globals) {
                     }
                 }
             },
-            DrawLine: function (height, text) {
+            DrawLine: function (height, text, isGuestScore) {
                 if (height <= LD50.MainScene.MIN_DIST) {
                     return;
                 }
 
-                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X - 100, height), new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X + 100, height), new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 128), 1);
-                text.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.75, this.DefaultCamera.WorldToScreenPoint(new JuiceboxEngine.Math.Vector2.$ctor3(0, height)).Y);
+                JuiceboxEngine.Debugging.DebugRenderer.Instance.DrawLine(new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X - 100, height), new JuiceboxEngine.Math.Vector2.$ctor3(this.DefaultCamera.Parent.Transform.Position2D.X + 100, height), isGuestScore ? new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 64) : new JuiceboxEngine.Math.Color.$ctor2(128, 128, 128, 128), 1);
+                text.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(isGuestScore ? 0.1 : 0.75, this.DefaultCamera.WorldToScreenPoint(new JuiceboxEngine.Math.Vector2.$ctor3(0, height)).Y);
             },
             GetHighestPoint: function () {
                 var highest = LD50.MainScene.MIN_DIST;
