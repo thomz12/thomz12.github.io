@@ -413,6 +413,7 @@ H5.assembly("LD50", function ($asm, globals) {
                 if (task != null) {
                     if (task.Success && this._pressedPlay) {
                         this.SceneManager.SwitchToScene(new LD50.MainScene(this.ResourceManager));
+                        return;
                     }
                 }
 
