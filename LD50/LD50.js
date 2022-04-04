@@ -502,6 +502,7 @@ H5.assembly("LD50", function ($asm, globals) {
             _falltimer: 0,
             _pressToReturn: false,
             placed: 0,
+            _elapsed: 0,
             cooldown: 0
         },
         ctors: {
@@ -629,6 +630,7 @@ H5.assembly("LD50", function ($asm, globals) {
             PreUpdate: function () {
                 this.cooldown += JuiceboxEngine.Util.Time.DeltaTime;
                 this._falltimer += JuiceboxEngine.Util.Time.DeltaTime;
+                this._elapsed += JuiceboxEngine.Util.Time.DeltaTime;
 
                 if (!this._gameover) {
                     if (this._leaderboardEntries != null) {
@@ -643,6 +645,7 @@ H5.assembly("LD50", function ($asm, globals) {
                     if (this._aiming) {
                         if (this._aimingObject == null) {
                             this._aimingObject = this.CreateDish();
+                            JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAudio(System.String.format("Audio/Plop.mp3", null)));
                         }
 
                         var body = this._aimingObject.GetComponent(JuiceboxEngine.Physics.BodyP2);
@@ -851,7 +854,7 @@ H5.assembly("LD50", function ($asm, globals) {
 
                                                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.GameOver());
 
-                                                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["highscores", "attempts", "placed"], System.String), System.Array.init([H5.Int.clip32((this._highestPoint - LD50.MainScene.MIN_DIST) * 10), 1, this.placed], System.Int32));
+                                                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["highscores", "attempts", "placed", "playtime"], System.String), System.Array.init([H5.Int.clip32((this._highestPoint - LD50.MainScene.MIN_DIST) * 10), 1, this.placed, H5.Int.clip32(this._elapsed)], System.Int32));
                                             }
                                         }
 
