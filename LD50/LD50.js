@@ -280,7 +280,7 @@ H5.assembly("LD50", function ($asm, globals) {
                 map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
                 map.Parallax = 0.9;
 
-                this.DefaultCamera.Zoom = 4;
+                this.DefaultCamera.Zoom = JuiceboxEngine.Util.Browser.IsMobile() ? 3 : 4;
 
                 this._logo = this.AddGameObject$1("Logo");
                 this._logo.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 32);
@@ -541,7 +541,7 @@ H5.assembly("LD50", function ($asm, globals) {
              */
             InitializeScene: function () {
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
-                this.DefaultCamera.Zoom = 4;
+                this.DefaultCamera.Zoom = JuiceboxEngine.Util.Browser.IsMobile() ? 3 : 4;
 
                 this._background = this.AddGameObject$1("background");
                 var music = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
