@@ -501,6 +501,7 @@ H5.assembly("LD50", function ($asm, globals) {
             _gameoverObj: null,
             _falltimer: 0,
             _pressToReturn: false,
+            placed: 0,
             cooldown: 0
         },
         ctors: {
@@ -659,6 +660,7 @@ H5.assembly("LD50", function ($asm, globals) {
                             body.Velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, -20);
 
                             this._falltimer = 0.0;
+                            this.placed = (this.placed + 1) | 0;
 
                             this._aiming = false;
                             this._moving = false;
@@ -849,7 +851,7 @@ H5.assembly("LD50", function ($asm, globals) {
 
                                                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.GameOver());
 
-                                                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["highscores"], System.String), System.Array.init([H5.Int.clip32((this._highestPoint - LD50.MainScene.MIN_DIST) * 10)], System.Int32));
+                                                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["highscores", "attempts", "placed"], System.String), System.Array.init([H5.Int.clip32((this._highestPoint - LD50.MainScene.MIN_DIST) * 10), 1, this.placed], System.Int32));
                                             }
                                         }
 
