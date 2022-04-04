@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.13.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.14.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -12388,8 +12388,10 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             Update: function () {
                 var timestep = JuiceboxEngine.Util.Time.DeltaTime;
 
-                if (timestep > 0.016666668) {
-                    timestep = 0.016666668;
+                var maxTimestep = 0.013333334;
+
+                if (timestep > maxTimestep) {
+                    timestep = maxTimestep;
                 }
 
                 this._world.step(timestep);
@@ -18159,6 +18161,23 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     var $t, $t1;
                     ($t = this.body.velocity)[0] = value.X;
                     ($t1 = this.body.velocity)[1] = value.Y;
+                }
+            },
+            /**
+             * Body angular velocity.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Physics.BodyP2
+             * @function AngularVelocity
+             * @type number
+             */
+            AngularVelocity: {
+                get: function () {
+                    return this.body.angularVelocity;
+                },
+                set: function (value) {
+                    this.body.angularVelocity = value;
                 }
             },
             /**

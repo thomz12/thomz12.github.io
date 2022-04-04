@@ -503,6 +503,7 @@ H5.assembly("LD50", function ($asm, globals) {
             _pressToReturn: false,
             placed: 0,
             _elapsed: 0,
+            _intro: null,
             cooldown: 0
         },
         ctors: {
@@ -568,6 +569,27 @@ H5.assembly("LD50", function ($asm, globals) {
                 this._scoreText.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(2000, 48);
                 this._scoreText.Pivot = new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 0.0);
                 this._scoreText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(1, -1);
+
+                this._intro = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                this._intro.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._intro.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                var introText = new JuiceboxEngine.GUI.Text(this._intro);
+                introText.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                introText.DisplayText = "Drag and drop,";
+                introText.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                introText.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                introText.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                introText.ResizeToText(48);
+
+                var introText2 = new JuiceboxEngine.GUI.Text(this._intro);
+                introText2.Font = this.ResourceManager.Load(JuiceboxEngine.Graphics.Font, LD50.JuiceUI.JuiceUIConsts.FONT_48_PATH);
+                introText2.DisplayText = "Pile dishes to the top!";
+                introText2.ShadowOffset = new JuiceboxEngine.Math.Point.$ctor1(2, -2);
+                introText2.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                introText2.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                introText2.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -48);
+                introText2.ResizeToText(48);
 
                 this.GetLeaderboard();
             },
@@ -661,6 +683,12 @@ H5.assembly("LD50", function ($asm, globals) {
                         if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyUp(JuiceboxEngine.Input.MouseKey.LeftMouse) && this._moving) {
                             body.Mass = this._dishMass;
                             body.Velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, -20);
+                            body.AngularVelocity = 0;
+
+                            if (this._intro != null) {
+                                this.GUI.Root.RemoveChild(this._intro);
+                                this._intro = null;
+                            }
 
                             this._falltimer = 0.0;
                             this.placed = (this.placed + 1) | 0;
