@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.2.14.0");
+H5.assemblyVersion("JuiceboxEngine","0.2.10.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -12386,16 +12386,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @return  {void}
              */
             Update: function () {
-                var timestep = JuiceboxEngine.Util.Time.DeltaTime;
-
-                var maxTimestep = 0.013333334;
-
-                if (timestep > maxTimestep) {
-                    timestep = maxTimestep;
-                }
-
-                this._world.step(timestep);
-                this._world.step(timestep);
+                this._world.step(this.FixedTimeStep);
             }
         }
     });
@@ -18164,23 +18155,6 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 }
             },
             /**
-             * Body angular velocity.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Physics.BodyP2
-             * @function AngularVelocity
-             * @type number
-             */
-            AngularVelocity: {
-                get: function () {
-                    return this.body.angularVelocity;
-                },
-                set: function (value) {
-                    this.body.angularVelocity = value;
-                }
-            },
-            /**
              * Make this body a trigger only.
              It will still fire collision events, but will move through other bodies.
              *
@@ -18276,7 +18250,6 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this.HasWorld = false;
 
                 this.body.bodyp2 = this;
-                this.body.angularDamping = 0.5;
             }
         },
         methods: {

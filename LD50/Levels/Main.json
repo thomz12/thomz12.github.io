@@ -39,7 +39,7 @@
         },
         {
           "Type": "Collider",
-          "Width": 80,
+          "Width": 64,
           "Height": 32
         }
       ]
@@ -56,7 +56,7 @@
         {
           "Type": "Collider",
           "Width": 320,
-          "Height": 32
+          "Height": 16
         }
       ]
     },
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "Name": "Side",
+      "Name": "",
       "Components": [
         {
           "Type": "Transform",
@@ -109,18 +109,18 @@
       ]
     },
     {
-      "Name": "Microwave",
+      "Name": "",
       "Components": [
         {
           "Type": "Transform",
-          "X": 496,
-          "Y": 48,
+          "X": 512,
+          "Y": 16,
           "Rotation": 0
         },
         {
           "Type": "Collider",
-          "Width": 25,
-          "Height": 12
+          "Width": 16,
+          "Height": 48
         }
       ]
     },
@@ -130,13 +130,13 @@
         {
           "Type": "Transform",
           "X": 512,
-          "Y": 64,
+          "Y": 16,
           "Rotation": 0
         },
         {
           "Type": "Collider",
           "Width": 16,
-          "Height": 15
+          "Height": 48
         }
       ]
     }

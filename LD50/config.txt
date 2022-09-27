@@ -3,7 +3,7 @@
 	"PixelPerfect": false,
 	"PreloadList": "preload.txt",
 	"Fullscreen": true,
-	"SplashText": "AFWAS",
+	"SplashText": "Ludum Dare 50!",
 	"CanvasID": "JuiceboxCanvas",
 	"PlayfabTitleID": "A7EB5"
 }
