@@ -79,7 +79,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 personSystem.addOnPersonCreate(H5.fn.cacheBind(this, this.PersonCreate));
 
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
-                this.DefaultCamera.Zoom = 1;
+                this.DefaultCamera.Zoom = 2;
 
                 JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.UseDepth(true);
 
@@ -179,7 +179,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                     this._hasControl = false;
 
                                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.5, H5.fn.bind(this, function (x) {
-                                            this.DefaultCamera.Zoom = 1 + JuiceboxEngine.Math.Easings.QuadraticEaseOut(x);
+                                            this.DefaultCamera.Zoom = 2 + JuiceboxEngine.Math.Easings.QuadraticEaseOut(x) * 2;
                                             this._topPanel.Position = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 1.0), JuiceboxEngine.Math.JMath.Interpolate(0, -this._topPanel.Dimensions.Y, x));
                                             this._bottomPanel.Position = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 1.0), JuiceboxEngine.Math.JMath.Interpolate(0, this._bottomPanel.Dimensions.Y, x));
                                         })));
@@ -193,7 +193,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         this._timer = LD51.MainScene.ICE_SMELT_TIME;
 
                                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.5, H5.fn.bind(this, function (x) {
-                                            this.DefaultCamera.Zoom = 1 + JuiceboxEngine.Math.Easings.QuarticEaseIn(1.0 - x);
+                                            this.DefaultCamera.Zoom = 2 + JuiceboxEngine.Math.Easings.QuarticEaseIn(1.0 - x) * 2;
                                             this._topPanel.Position = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 1.0), JuiceboxEngine.Math.JMath.Interpolate(-this._topPanel.Dimensions.Y, 0, x));
                                             this._bottomPanel.Position = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0.0, 1.0), JuiceboxEngine.Math.JMath.Interpolate(this._bottomPanel.Dimensions.Y, 0, x));
                                         })));
@@ -432,7 +432,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _playerSprite: null,
             speed: 0,
             maxSpeed: 0,
-            reversing: false
+            reversing: false,
+            tilt: 0
         },
         ctors: {
             ctor: function (playerPhysics) {
@@ -453,13 +454,13 @@ H5.assembly("LD51", function ($asm, globals) {
                     this.speed = 0;
                 }
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W")) {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp") || JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
                     this.speed += 500 * JuiceboxEngine.Util.Time.DeltaTime;
 
                     if (this.speed > 0) {
                         this.reversing = false;
                     }
-                } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("S")) {
+                } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("S") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowDown")) {
                     if (this.speed <= 0) {
                         this.speed -= 300 * JuiceboxEngine.Util.Time.DeltaTime;
                         this.reversing = true;
@@ -483,9 +484,9 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playerPhysics.AngularVelocity = 0;
 
                 if (JuiceboxEngine.Math.JMath.Abs(this.speed) > 0.1) {
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("D")) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("D") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowRight")) {
                         this._playerPhysics.AngularVelocity = -JuiceboxEngine.Math.JMath.Interpolate(3, 2, (this.speed / this.maxSpeed));
-                    } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("A")) {
+                    } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("A") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowLeft")) {
                         this._playerPhysics.AngularVelocity = JuiceboxEngine.Math.JMath.Interpolate(3, 2, (this.speed / this.maxSpeed));
                     }
 
