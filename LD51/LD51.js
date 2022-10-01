@@ -160,7 +160,7 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._score = (this._score + addedScore) | 0;
                         this._scoreUI.AddScore(addedScore);
 
-                        this._currentPerson = this.FindPerson();
+                        this._currentPerson = this.FindPerson(((H5.Int.mul(this._deliveries, 50) + 100) | 0));
                         this._currentPerson.WantsIceCream();
                     }
                 }
@@ -218,7 +218,7 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this.DefaultCamera.GameObject.Transform.Position2D = this._player.Transform.Position2D.$clone();
 
-                this._currentPerson = this.FindPerson();
+                this._currentPerson = this.FindPerson(0);
                 this._currentPerson.WantsIceCream();
             },
             /**
@@ -256,8 +256,21 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._playerSprite.Size = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * 50)), 0.02), (this._controller.speed / this._controller.maxSpeed)));
             },
-            FindPerson: function () {
-                return this._people.getItem(JuiceboxEngine.Math.RandomNumbers.NextRange(0, this._people.Count));
+            FindPerson: function (range) {
+                var ordered = System.Linq.Enumerable.from(this._people, LD51.PersonComponent).orderBy(H5.fn.bind(this, function (x) {
+                        return JuiceboxEngine.Math.JMath.Abs((JuiceboxEngine.Math.Vector2.op_Subtraction(x.GameObject.Transform.Position2D.$clone(), this._player.Transform.Position2D.$clone())).Length() - range);
+                    }));
+
+                for (var i = 0; i < ordered.count(); i = (i + 1) | 0) {
+                    if (H5.referenceEquals(ordered.elementAt(i), this._currentPerson)) {
+                        continue;
+                    }
+
+                    return ordered.elementAt(i);
+                }
+
+                return null;
+
             },
             /**
              * Called every frame, after all gameobject had an update.
