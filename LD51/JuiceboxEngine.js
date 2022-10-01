@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.0.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.1.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -15441,6 +15441,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              */
             Initialize: function () {
                 this.UIElement = null;
+                this.Camera = this.GameObject.Scene.DefaultCamera;
             },
             /**
              * Update the component.
@@ -16826,6 +16827,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     texture.Width = (image.width) | 0;
                     texture.Height = (image.height) | 0;
                     texture.sortValue = this._sortValue;
+
                     texture.FinishLoad();
 
                     if (!texture.HasPower2Dimensions()) {
@@ -16840,6 +16842,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     texture.FinishLoad();
                 });
 
+                image.crossOrigin = "";
                 image.src = path;
 
                 return texture;
@@ -19923,10 +19926,19 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @this JuiceboxEngine.Physics.P2PhysicsComponent
              * @memberof JuiceboxEngine.Physics.P2PhysicsComponent
              * @param   {JuiceboxEngine.Math.Vector2}    force    The force applied to the body.
+             * @param   {boolean}                        local    Determines if the force is applied locally or not.
              * @return  {void}
              */
-            ApplyForce: function (force) {
-                this.bodyP2.applyForce(System.Array.init([force.X, force.Y], System.Double));
+            ApplyForce: function (force, local) {
+                if (local === void 0) { local = true; }
+                if (local) {
+                    this.bodyP2.applyForceLocal(JuiceboxEngine.Physics.P2Extensions.ToP2Vector2(force));
+                } else {
+                    this.bodyP2.applyForce(JuiceboxEngine.Physics.P2Extensions.ToP2Vector2(force));
+                }
+            },
+            SetAngularForce: function (force) {
+                this.bodyP2.angularForce = force;
             },
             /**
              * Add circle shape to the body.
