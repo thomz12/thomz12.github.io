@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.1.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.2.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -20349,6 +20349,17 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              */
             Color: null,
             /**
+             * Rotation of the sprite from the gameobject. 
+             Is added to the rotation of the gameobject.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Components.LayeredSpriteComponent
+             * @function Rotation
+             * @type number
+             */
+            Rotation: 0,
+            /**
              * Scale the sprite with a given size.
              *
              * @instance
@@ -20646,7 +20657,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                         var colorStep = ((((this.Layers - layerIndex) | 0)) * this.ColorStep);
                         var finalColor = new JuiceboxEngine.Math.Color.$ctor3(this.Color.R - colorStep, this.Color.G - colorStep, this.Color.B - colorStep, this.Color.A);
 
-                        var rotation = this.GameObject.Transform.Rotation2D;
+                        var rotation = this.GameObject.Transform.Rotation2D + this.Rotation;
 
                         if (this.SnapRotation > 0.0) {
                             var stepSize = JuiceboxEngine.Math.JMath.TWO_PI / this.SnapRotation;
