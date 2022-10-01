@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.2.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.3.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -13284,6 +13284,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * Component manager.
              *
              * @instance
+             * @public
              * @memberof JuiceboxEngine.Scene
              * @function ComponentManager
              * @type JuiceboxEngine.Components.ComponentManager
@@ -14483,16 +14484,6 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
         inherits: [JuiceboxEngine.Components.Component],
         fields: {
             /**
-             * Audioclip used by this component.
-             *
-             * @instance
-             * @public
-             * @memberof JuiceboxEngine.Audio.AudioComponent
-             * @function AudioClip
-             * @type JuiceboxEngine.Audio.AudioClip
-             */
-            AudioClip: null,
-            /**
              * Indicates if the clip is playing.
              *
              * @instance
@@ -14506,9 +14497,29 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             _hasID: false,
             _volume: 0,
             _loop: false,
-            _playbackRate: 0
+            _playbackRate: 0,
+            _clip: null
         },
         props: {
+            /**
+             * Audioclip used by this component.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Audio.AudioComponent
+             * @function AudioClip
+             * @type JuiceboxEngine.Audio.AudioClip
+             */
+            AudioClip: {
+                get: function () {
+                    return this._clip;
+                },
+                set: function (value) {
+                    this.Stop();
+                    this._clip = value;
+                    this._hasID = false;
+                }
+            },
             /**
              * Loop the audio or not.
              *

@@ -27,13 +27,22 @@ H5.assembly("LD51", function ($asm, globals) {
         },
         fields: {
             _player: null,
+            _arrow: null,
             _controller: null,
             _playerSprite: null,
             _timerUI: null,
+            _scoreUI: null,
             _timer: 0,
             _hasControl: false,
+            _deliveries: 0,
+            _score: 0,
             _topPanel: null,
-            _bottomPanel: null
+            _bottomPanel: null,
+            _people: null,
+            _currentPerson: null,
+            _backgroundAudio: null,
+            _timerAudio: null,
+            _currentLevel: 0
         },
         ctors: {
             /**
@@ -50,6 +59,7 @@ H5.assembly("LD51", function ($asm, globals) {
             ctor: function (manager) {
                 this.$initialize();
                 JuiceboxEngine.Scene.ctor.call(this, manager);
+                this._people = new (System.Collections.Generic.List$1(LD51.PersonComponent)).ctor();
             }
         },
         methods: {
@@ -64,6 +74,10 @@ H5.assembly("LD51", function ($asm, globals) {
              * @return  {void}
              */
             InitializeScene: function () {
+                var personSystem = new LD51.PersonComponentSystem();
+                this.ComponentManager.AddComponentSystem(personSystem);
+                personSystem.addOnPersonCreate(H5.fn.cacheBind(this, this.PersonCreate));
+
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
                 this.DefaultCamera.Zoom = 1;
 
@@ -71,6 +85,9 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 var level = this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/CityMap.json");
                 level.LoadToScene(this);
+
+                this._backgroundAudio = this.GetGameObjectByName("Music").GetComponent(JuiceboxEngine.Audio.AudioComponent);
+                this._timerAudio = this.GetGameObjectByName("Timer").GetComponent(JuiceboxEngine.Audio.AudioComponent);
 
                 this.PhysicsWorld.Gravity = new JuiceboxEngine.Math.Vector2.$ctor3(0, 0);
                 var wallPlayerMaterial = this.PhysicsWorld.CreateContactMaterial(new JuiceboxEngine.Physics.P2Material.$ctor1("wall"), new JuiceboxEngine.Physics.P2Material.$ctor1("player"));
@@ -81,12 +98,12 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._controller = new LD51.PlayerController(this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent));
                 this._playerSprite = this._player.GetComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
 
-                this._timerUI = new LD51.TimerUI(this.GUI.Root);
-                this._timerUI.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
-                this._timerUI.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
-                this._timerUI.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -8);
+                this._arrow = this.AddGameObject$1("Arrow");
+                var arrowSprite = this._arrow.AddComponent(JuiceboxEngine.Components.SpriteComponent);
+                arrowSprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(0, 32);
+                arrowSprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Arrow.png");
 
-                this.DefaultCamera.GameObject.Transform.Position2D = this._player.Transform.Position2D.$clone();
+                this.PlayLevelAudio(1);
 
                 this._topPanel = new JuiceboxEngine.GUI.Panel(this.GUI.Root);
                 this._topPanel.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(10000, 32);
@@ -100,7 +117,19 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._bottomPanel.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
                 this._bottomPanel.Color = JuiceboxEngine.Math.Color.Black.$clone();
 
+                this._timerUI = new LD51.TimerUI(this.GUI.Root);
+                this._timerUI.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._timerUI.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._timerUI.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -8);
+
+                this._scoreUI = new LD51.ScoreUI(this.GUI.Root);
+                this._scoreUI.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this._scoreUI.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+
                 this.StartGame();
+            },
+            PersonCreate: function (personComponent) {
+                this._people.add(personComponent);
             },
             PlayerCollisionStay: function (thisBody, otherBody) {
                 if (this._hasControl) {
@@ -114,10 +143,25 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (person.WantsIcecream) {
                     if (this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).Velocity.Length() < 0.1) {
                         person.GiveIceCream();
-
                         this._timer = LD51.MainScene.ICE_SMELT_TIME;
-
                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.FocusCamera());
+                        this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Play();
+                        this._deliveries = (this._deliveries + 1) | 0;
+
+                        if (this._deliveries === 10) {
+                            this.PlayLevelAudio(2);
+                        } else if (this._deliveries === 20) {
+                            this.PlayLevelAudio(3);
+                        }
+
+
+                        var addedScore = 100;
+
+                        this._score = (this._score + addedScore) | 0;
+                        this._scoreUI.AddScore(addedScore);
+
+                        this._currentPerson = this.FindPerson();
+                        this._currentPerson.WantsIceCream();
                     }
                 }
             },
@@ -170,6 +214,12 @@ H5.assembly("LD51", function ($asm, globals) {
             StartGame: function () {
                 this._timer = LD51.MainScene.ICE_SMELT_TIME;
                 this._hasControl = true;
+                this._deliveries = 0;
+
+                this.DefaultCamera.GameObject.Transform.Position2D = this._player.Transform.Position2D.$clone();
+
+                this._currentPerson = this.FindPerson();
+                this._currentPerson.WantsIceCream();
             },
             /**
              * Called every frame, before any gameobject updates.
@@ -185,12 +235,18 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (this._hasControl) {
                     this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
                     this._timerUI.UpdateTime(this._timer);
-                    this._timerUI.Enabled = true;
-                } else {
-                    this._timerUI.Enabled = false;
+
+                    if (this._timer < 5.0) {
+                        this._timerAudio.Volume = (3.0 - this._timer) / 3.0;
+                    } else {
+                        this._timerAudio.Volume = 0;
+                    }
                 }
 
                 if (this._timer < 0.0) {
+                    this._timer = 0;
+                    this._timerUI.UpdateTime(this._timer);
+
                     this._hasControl = false;
                 }
 
@@ -199,6 +255,9 @@ H5.assembly("LD51", function ($asm, globals) {
                 }
 
                 this._playerSprite.Size = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * 50)), 0.02), (this._controller.speed / this._controller.maxSpeed)));
+            },
+            FindPerson: function () {
+                return this._people.getItem(JuiceboxEngine.Math.RandomNumbers.NextRange(0, this._people.Count));
             },
             /**
              * Called every frame, after all gameobject had an update.
@@ -211,11 +270,25 @@ H5.assembly("LD51", function ($asm, globals) {
              * @return  {void}
              */
             PostUpdate: function () {
-                if (JuiceboxEngine.Util.Time.DeltaTime > 0.02) {
-                    JuiceboxEngine.Util.Log.LogInfo("Frame time is high!");
-                }
+                this._arrow.Transform.Position2D = this._player.Transform.Position2D.$clone();
 
+                var dir = JuiceboxEngine.Math.Vector2.op_Subtraction(this._currentPerson.GameObject.Transform.Position2D.$clone(), this._player.Transform.Position2D.$clone());
+                dir.Normalize();
+
+                this._arrow.Transform.Rotation2D = JuiceboxEngine.Math.JMath.ATan2(dir.Y, dir.X) - JuiceboxEngine.Math.JMath.PI_OVER_TWO;
                 this.DefaultCamera.GameObject.Transform.Position2D = JuiceboxEngine.Math.Vector2.Interpolate(this.DefaultCamera.GameObject.Transform.Position2D.$clone(), JuiceboxEngine.Math.Vector2.op_Addition(this._player.Transform.Position2D.$clone(), (JuiceboxEngine.Math.Vector2.op_Multiply$1(this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).Velocity.$clone(), 0.25))), 5.0 * JuiceboxEngine.Util.Time.DeltaTime);
+            },
+            PlayLevelAudio: function (level) {
+                level = JuiceboxEngine.Math.JMath.Clamp(level, 1, 3);
+
+                this._currentLevel = level;
+
+                this._backgroundAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Overworld_level_{0}.mp3", [level]));
+                this._timerAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Overworld_timer_{0}.mp3", [level]));
+                this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Bliep{0}.mp3", [level]));
+
+                this._backgroundAudio.Play();
+                this._timerAudio.Play();
             },
             /**
              * Called when the scene is about to be destroyed.
@@ -260,6 +333,14 @@ H5.assembly("LD51", function ($asm, globals) {
             Initialize: function () {
                 this._setup = false;
                 this._ui = this.GameObject.AddComponent(JuiceboxEngine.Components.UIComponent);
+
+                var image = new JuiceboxEngine.GUI.Image(this.GameObject.Scene.GUI.Root);
+                image.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                image.DisplayImage = this.GameObject.Scene.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/IceCreamRequest.png");
+                image.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(image.DisplayImage.Width, image.DisplayImage.Height), this.GameObject.Scene.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize);
+                image.Enabled = false;
+
+                this._ui.UIElement = image;
             },
             Update: function () {
                 JuiceboxEngine.Components.Component.prototype.Update.call(this);
@@ -267,17 +348,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (!this._setup) {
                     var sprite = this.GameObject.GetComponent(JuiceboxEngine.Components.SpriteComponent);
                     sprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), LD51.PersonComponent.PERSON_DIMENSIONS, LD51.PersonComponent.PERSON_DIMENSIONS);
-
-                    var image = new JuiceboxEngine.GUI.Image(this.GameObject.Scene.GUI.Root);
-                    image.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
-                    image.DisplayImage = this.GameObject.Scene.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/IceCreamRequest.png");
-                    image.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(image.DisplayImage.Width, image.DisplayImage.Height), this.GameObject.Scene.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize);
-                    image.Enabled = false;
-
-                    this._ui.UIElement = image;
-
-                    this.WantsIceCream();
-
                     this._setup = true;
                 }
             },
@@ -291,9 +361,7 @@ H5.assembly("LD51", function ($asm, globals) {
             },
             GiveIceCream: function () {
                 if (this.WantsIcecream) {
-                    JuiceboxEngine.Util.Log.LogInfo("Sold!");
                     this.WantsIcecream = false;
-
                     JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.HideBubble());
                 }
             },
@@ -332,6 +400,28 @@ H5.assembly("LD51", function ($asm, globals) {
             },
             Destroy: function () {
 
+            }
+        }
+    });
+
+    H5.define("LD51.PersonComponentSystem", {
+        inherits: [JuiceboxEngine.Components.ComponentSystem],
+        events: {
+            OnPersonCreate: null
+        },
+        ctors: {
+            ctor: function () {
+                this.$initialize();
+                JuiceboxEngine.Components.ComponentSystem.ctor.call(this, LD51.PersonComponent);
+            }
+        },
+        methods: {
+            CreateComponent: function () {
+                var person = new LD51.PersonComponent();
+
+                !H5.staticEquals(this.OnPersonCreate, null) ? this.OnPersonCreate(person) : null;
+
+                return person;
             }
         }
     });
@@ -432,6 +522,92 @@ H5.assembly("LD51", function ($asm, globals) {
         }
     });
 
+    H5.define("LD51.ScoreUI", {
+        inherits: [JuiceboxEngine.GUI.EmptyUIElement],
+        fields: {
+            _text: null,
+            _score: 0,
+            _displayedScore: 0
+        },
+        ctors: {
+            ctor: function (parent) {
+                this.$initialize();
+                JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 128);
+
+                this._score = 0;
+
+                this._text = new JuiceboxEngine.GUI.CanvasText(this);
+                this._text.Dimensions = this.Dimensions.$clone();
+                this._text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                this._text.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                this._text.DisplayText = "";
+                this._text.Font = "AldotheApache";
+                this._text.TextSize = 128;
+                this._text.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this._text.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this._text.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
+            }
+        },
+        methods: {
+            AddScore: function (score) {
+                this._score = (this._score + score) | 0;
+
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ScoreAnimation(score));
+            },
+            ScoreAnimation: function (addedScore) {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.25, H5.fn.bind(this, function (x) {
+                                            this._text.Scale = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), x);
+                                        })));
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(1.0, H5.fn.bind(this, function (x) {
+                                            this._displayedScore = (this._score + H5.Int.clip32(JuiceboxEngine.Math.JMath.Interpolate(0, addedScore, x))) | 0;
+                                            this._text.DisplayText = H5.toString(this._displayedScore);
+                                        })));
+                                        $s = 2;
+                                        return true;
+                                }
+                                case 2: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.25, H5.fn.bind(this, function (x) {
+                                            this._text.Scale = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5), x);
+                                        })));
+                                        $s = 3;
+                                        return true;
+                                }
+                                case 3: {
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
+            },
+            SetScoreDisplay: function (score) {
+                this._text.DisplayText = score;
+            }
+        }
+    });
+
     H5.define("LD51.TimerUI", {
         inherits: [JuiceboxEngine.GUI.EmptyUIElement],
         fields: {
@@ -444,15 +620,24 @@ H5.assembly("LD51", function ($asm, globals) {
                 this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(256, 64);
 
                 this._canvasTextTimer = new JuiceboxEngine.GUI.CanvasText(this);
-                this._canvasTextTimer.DisplayText = "10:00.000";
+                this._canvasTextTimer.DisplayText = " ";
                 this._canvasTextTimer.Dimensions = this.Dimensions.$clone();
+                this._canvasTextTimer.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._canvasTextTimer.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._canvasTextTimer.Font = "AldotheApache";
-                this._canvasTextTimer.TextSize = 32;
+                this._canvasTextTimer.TextSize = 64;
+                this._canvasTextTimer.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
             }
         },
         methods: {
             UpdateTime: function (time) {
                 this._canvasTextTimer.DisplayText = System.TimeSpan.fromSeconds(time).toString("ss.fff");
+
+                if (time < 3.0) {
+                    this._canvasTextTimer.Color = JuiceboxEngine.Math.Color.Red.$clone();
+                } else {
+                    this._canvasTextTimer.Color = JuiceboxEngine.Math.Color.White.$clone();
+                }
             },
             UpdateElement: function () {
 

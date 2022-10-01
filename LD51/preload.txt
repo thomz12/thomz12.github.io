@@ -1,7 +1,17 @@
+Sounds/Bliep1.mp3
+Sounds/Bliep2.mp3
+Sounds/Bliep3.mp3
+Sounds/Overworld_level_1.mp3
+Sounds/Overworld_level_2.mp3
+Sounds/Overworld_level_3.mp3
+Sounds/Overworld_timer_1.mp3
+Sounds/Overworld_timer_2.mp3
+Sounds/Overworld_timer_3.mp3
 Textures/People.png
 Textures/Truck.png
 Textures/IceIcon.png
 Textures/IceCreamRequest.png
+Textures/Arrow.png
 Levels/CityMap.json
 Levels/CityMap-1.png
 Fonts/AldotheApache.ttf
