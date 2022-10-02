@@ -5,6 +5,159 @@ H5.assemblyVersion("LD51","1.0.0.0");
 H5.assembly("LD51", function ($asm, globals) {
     "use strict";
 
+    /** @namespace LD50 */
+
+    /**
+     * Handles user sign-in or account creation.
+     *
+     * @class LD50.PlayfabSignin
+     */
+    H5.define("LD50.PlayfabSignin", {
+        fields: {
+            _loginID: null,
+            _currentState: 0
+        },
+        events: {
+            OnStateChange: null,
+            OnUsernameChanged: null
+        },
+        props: {
+            /**
+             * Current login state.
+             *
+             * @instance
+             * @memberof LD50.PlayfabSignin
+             * @function CurrentState
+             * @type number
+             */
+            CurrentState: {
+                get: function () {
+                    return this._currentState;
+                },
+                set: function (value) {
+                    this._currentState = value;
+                    !H5.staticEquals(this.OnStateChange, null) ? this.OnStateChange(this._currentState) : null;
+                }
+            }
+        },
+        ctors: {
+            /**
+             * Constructor.
+             *
+             * @instance
+             * @this LD50.PlayfabSignin
+             * @memberof LD50.PlayfabSignin
+             * @return  {void}
+             */
+            ctor: function () {
+                this.$initialize();
+                this._currentState = LD50.PlayfabSignin.LoginState.NONE;
+            }
+        },
+        methods: {
+            /**
+             * Login to playfab with stored login ID.
+             *
+             * @instance
+             * @this LD50.PlayfabSignin
+             * @memberof LD50.PlayfabSignin
+             * @return  {void}
+             */
+            AutoLogin: function () {
+                this._loginID = JuiceboxEngine.Util.LocalStorage.GetValue("login_id");
+
+                if (this._loginID == null) {
+                    this._loginID = System.Guid.NewGuid().toString();
+
+                    System.Console.WriteLine("Registering with Playfab...");
+                    this.CurrentState = LD50.PlayfabSignin.LoginState.REGISTERING;
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginWithCustomID(this._loginID, true);
+                } else {
+                    System.Console.WriteLine("Logging in with Playfab...");
+                    this.CurrentState = LD50.PlayfabSignin.LoginState.REGISTERING;
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginWithCustomID(this._loginID, false);
+                }
+
+                JuiceboxEngine.Playfab.PlayfabManager.Identity.LoginTask.addOnTaskCompleted(H5.fn.cacheBind(this, this.LoginFinished));
+            },
+            /**
+             * Change name of signed in user.
+             {@link } has to be {@link }
+             *
+             * @instance
+             * @this LD50.PlayfabSignin
+             * @memberof LD50.PlayfabSignin
+             * @param   {string}    username
+             * @return  {void}
+             */
+            ChangeName: function (username) {
+                if (this.CurrentState !== LD50.PlayfabSignin.LoginState.SIGNED_IN) {
+                    System.Console.WriteLine("Can't change name, user is not signed in.");
+                }
+
+                System.Console.WriteLine(System.String.format("Attempting to update username to {0}", [username]));
+
+                var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(username);
+                task.addOnTaskCompleted(H5.fn.cacheBind(this, this.UpdateUsername));
+            },
+            /**
+             * Called when sign-in finished.
+             *
+             * @instance
+             * @private
+             * @this LD50.PlayfabSignin
+             * @memberof LD50.PlayfabSignin
+             * @param   {JuiceboxEngine.Playfab.PlayfabTask}    task    The finished playfab task.
+             * @return  {void}
+             */
+            LoginFinished: function (task) {
+                if (task.Success) {
+                    JuiceboxEngine.Util.LocalStorage.StoreValue("login_id", this._loginID);
+
+                    System.Console.WriteLine(System.String.format("Logged in with Playfab! {0}", [JuiceboxEngine.Playfab.PlayfabManager.Identity.Username]));
+                    this.CurrentState = LD50.PlayfabSignin.LoginState.SIGNED_IN;
+                } else {
+                    this.CurrentState = LD50.PlayfabSignin.LoginState.ERROR;
+                    System.Console.WriteLine("Failed to log in with Playfab.");
+                }
+            },
+            /**
+             * Called when username update finished.
+             *
+             * @instance
+             * @private
+             * @this LD50.PlayfabSignin
+             * @memberof LD50.PlayfabSignin
+             * @param   {JuiceboxEngine.Playfab.PlayfabTask}    task    The finished playfab task.
+             * @return  {void}
+             */
+            UpdateUsername: function (task) {
+                !H5.staticEquals(this.OnUsernameChanged, null) ? this.OnUsernameChanged(task.Success, task.ErrorMessage) : null;
+            }
+        }
+    });
+
+    /**
+     * Sign-in states.
+     *
+     * @class number
+     */
+    H5.define("LD50.PlayfabSignin.LoginState", {
+        $kind: "nested enum",
+        statics: {
+            fields: {
+                NONE: 0,
+                SIGNED_OUT: 1,
+                SIGNED_IN: 2,
+                REGISTERING: 3,
+                SIGNING_IN: 4,
+                ERROR: 5
+            }
+        }
+    });
+
     H5.define("LD51.BigTextUI", {
         inherits: [JuiceboxEngine.GUI.EmptyUIElement],
         fields: {
@@ -114,14 +267,12 @@ H5.assembly("LD51", function ($asm, globals) {
             ctor: function (parent, text) {
                 this.$initialize();
                 JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
-                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 74);
-                this.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this.InputType = JuiceboxEngine.GUI.UIInput.SELF;
 
                 this.addOnMouseStay(H5.fn.cacheBind(this, this.MouseStay));
                 this.addOnMouseExit(H5.fn.cacheBind(this, this.MouseExit));
                 this.addOnMouseDown(H5.fn.cacheBind(this, this.MouseDown));
+                this.addOnMouseUp(H5.fn.cacheBind(this, this.MouseUp));
 
                 this._background = new JuiceboxEngine.GUI.Panel(this);
                 this._background.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
@@ -134,7 +285,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._foreground.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._foreground.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._foreground.Dimensions = this._background.Dimensions.$clone();
-                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
+                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
                 this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(-5, 5);
 
                 this._text = new JuiceboxEngine.GUI.CanvasText(this._foreground);
@@ -143,19 +294,37 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
                 this._text.DisplayText = text;
                 this._text.Font = "AldotheApache";
-                this._text.TextSize = 48;
+                this._text.TextSize = 32;
             }
         },
         methods: {
+            UpdateElement: function () {
+                JuiceboxEngine.GUI.EmptyUIElement.prototype.UpdateElement.call(this);
+
+                this._background.Dimensions = JuiceboxEngine.Math.Vector2.op_Subtraction(this.Dimensions.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(10, 10));
+                this._foreground.Dimensions = this._background.Dimensions.$clone();
+                this._text.Dimensions = this._foreground.Dimensions.$clone();
+            },
+            MouseUp: function (ev) {
+                this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+            },
             MouseDown: function (ev) {
                 this._background.Color = JuiceboxEngine.Math.Color.White.$clone();
                 this._foreground.Color = JuiceboxEngine.Math.Color.White.$clone();
             },
             MouseExit: function (ev) {
-                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, -5);
-                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(-5, 5);
+                var startBack = this._background.Position.$clone();
+                var startFront = this._foreground.Position.$clone();
+
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, H5.fn.bind(this, function (x) {
+                    this._background.Position = JuiceboxEngine.Math.Vector2.Interpolate(startBack.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(5, -5), x);
+                    this._foreground.Position = JuiceboxEngine.Math.Vector2.Interpolate(startFront.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-5, 5), x);
+
+                })));
+
                 this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
-                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
+                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
             },
             MouseStay: function (ev) {
                 var mouseEvent = ev;
@@ -164,6 +333,220 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(5, -5, pos.X), JuiceboxEngine.Math.JMath.Interpolate(5, -5, pos.Y));
                 this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(-5, 5, pos.X), JuiceboxEngine.Math.JMath.Interpolate(-5, 5, pos.Y));
+            }
+        }
+    });
+
+    H5.define("LD51.MainMenu", {
+        inherits: [JuiceboxEngine.Scene],
+        fields: {
+            _player: null,
+            _background: null,
+            _playfabText: null,
+            username: null,
+            askUsername: false
+        },
+        ctors: {
+            ctor: function (manager) {
+                this.$initialize();
+                JuiceboxEngine.Scene.ctor.call(this, manager);
+
+            }
+        },
+        methods: {
+            InitializeScene: function () {
+                JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.UseDepth(true);
+
+                this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+
+                this._player = this.AddGameObject$1("PlayerPreview");
+                this._player.Transform.Position2D = new JuiceboxEngine.Math.Vector2.$ctor3(0, 64);
+
+                var sprite = this._player.AddComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
+                sprite.Texture = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Truck.png");
+                sprite.Layers = 32;
+                sprite.LayerResolution = 8;
+                sprite.LayerDimensions = new JuiceboxEngine.Math.Point.$ctor1(16, 32);
+                sprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(-8, -16);
+                sprite.Size = new JuiceboxEngine.Math.Vector2.$ctor3(5, 5);
+                sprite.SnapRotation = 0;
+
+                var ui = this._player.AddComponent(JuiceboxEngine.Components.UIComponent);
+                ui.UIElement = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this.GUI.Root);
+                ui.UIElement.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                ui.UIElement.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 200);
+                ui.UIElement.addOnMouseDown(H5.fn.cacheBind(this, this.ClickPlayer));
+
+                this._background = this.AddGameObject$1("background");
+                var map = this._background.AddComponent(JuiceboxEngine.Components.TileMapComponent);
+                map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/MainMenuSprites.png");
+                map.TileSize = 64;
+                map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
+
+                var button = new LD51.Button(this.GUI.Root, "Play!");
+                button.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 74);
+                button.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                button.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                button.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this.Play();
+                }));
+
+                var leaderboards = new LD51.Button(this.GUI.Root, "Leaderboards");
+                leaderboards.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
+                leaderboards.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                leaderboards.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -79);
+                leaderboards.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                leaderboards.addOnMouseUp(function (ev) { });
+
+                var creditsBtn = new LD51.Button(this.GUI.Root, "Credits");
+                creditsBtn.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
+                creditsBtn.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                creditsBtn.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -139);
+                creditsBtn.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                creditsBtn.addOnMouseUp(function (ev) { });
+
+                var signin = new LD50.PlayfabSignin();
+                signin.AutoLogin();
+                signin.addOnStateChange(H5.fn.cacheBind(this, this.PlayfabStateChange));
+
+                this._playfabText = new JuiceboxEngine.GUI.CanvasText(this.GUI.Root);
+                this._playfabText.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 64);
+                this._playfabText.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._playfabText.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._playfabText.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                this._playfabText.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Top;
+                this._playfabText.DisplayText = "Connecting to playfab...";
+                this._playfabText.Font = "AldotheApache";
+                this._playfabText.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+
+            },
+            ClickPlayer: function (ev) {
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Click());
+            },
+            Click: function () {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    sprite,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    sprite = this._player.GetComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
+
+                                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, function (x) {
+                                            sprite.Size = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(6.0, 6.0), new JuiceboxEngine.Math.Vector2.$ctor3(5.0, 5.0), x);
+                                        }));
+
+                                        sprite.Color = new JuiceboxEngine.Math.Color.$ctor3(999.0, 999.0, 999.0, 1.0);
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.016);
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    sprite.Color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, 1.0);
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
+            },
+            PlayfabStateChange: function (state) {
+                switch (state) {
+                    case LD50.PlayfabSignin.LoginState.NONE: 
+                        this._playfabText.DisplayText = "Can't connect.";
+                        break;
+                    case LD50.PlayfabSignin.LoginState.SIGNED_OUT: 
+                        this._playfabText.DisplayText = "Signed out.";
+                        break;
+                    case LD50.PlayfabSignin.LoginState.SIGNED_IN: 
+                        this._playfabText.DisplayText = "Signed in.";
+                        var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayName(JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId);
+                        task.addOnTaskCompleted(H5.fn.cacheBind(this, this.GotUsername));
+                        ;
+                        break;
+                    case LD50.PlayfabSignin.LoginState.REGISTERING: 
+                        this._playfabText.DisplayText = "Registering...";
+                        break;
+                    case LD50.PlayfabSignin.LoginState.SIGNING_IN: 
+                        this._playfabText.DisplayText = "Signing in...";
+                        break;
+                    case LD50.PlayfabSignin.LoginState.ERROR: 
+                        this._playfabText.DisplayText = "Couldn't sign in...";
+                        break;
+                    default: 
+                        break;
+                }
+            },
+            Play: function () {
+                if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
+                    if (this.askUsername) {
+                        this.AskUsername(null);
+                        return;
+                    }
+                }
+
+                this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+            },
+            AskUsername: function (task) {
+                if (task != null) {
+                    if (task.Success) {
+                        this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+                    }
+                } else {
+                    var defaultName = System.String.format("Ice Driver #{0}", [JuiceboxEngine.Math.RandomNumbers.NextRange(1000, 10000)]);
+
+                    var inputName = null;
+                    var msg = task == null ? "Username for leaderboards" : "Error, please try a different name. (Name already taken?)";
+
+                    try {
+                        inputName = JuiceboxEngine.Util.Browser.Prompt(msg, defaultName);
+                    } catch ($e1) {
+                        $e1 = System.Exception.create($e1);
+                        JuiceboxEngine.Util.Log.LogWarning(System.String.format("Can't show prompt. will use default name. ({0})", [defaultName]));
+                    }
+
+                    if (inputName == null) {
+                        inputName = defaultName;
+                    }
+
+                    JuiceboxEngine.Playfab.PlayfabManager.Identity.UpdateDisplayName(inputName).addOnTaskCompleted(H5.fn.cacheBind(this, this.AskUsername));
+                }
+            },
+            GotUsername: function (task) {
+                if (task.Success) {
+                    this.username = task.Response.InfoResultPayload.AccountInfo.TitleInfo.DisplayName;
+
+                    if (this.username != null) {
+                        this._playfabText.DisplayText = System.String.format("Signed in, welcome {0}", [this.username]);
+                    } else {
+                        this.askUsername = true;
+                    }
+                }
+            },
+            PreUpdate: function () {
+                var $t;
+                $t = this._player.Transform;
+                $t.Rotation2D += 0.7853982 * JuiceboxEngine.Util.Time.DeltaTime;
+                this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(16, 16), JuiceboxEngine.Util.Time.DeltaTime));
+            },
+            PostUpdate: function () {
+
+            },
+            FinalizeScene: function () {
+
             }
         }
     });
@@ -208,6 +591,7 @@ H5.assembly("LD51", function ($asm, globals) {
             _people: null,
             _currentPerson: null,
             _vroomAudio: null,
+            _bonkAudio: null,
             _backgroundAudio: null,
             _currentLevel: 0
         },
@@ -248,12 +632,11 @@ H5.assembly("LD51", function ($asm, globals) {
                 this.DefaultCamera.ClearColor = new JuiceboxEngine.Math.Color.$ctor2(30, 144, 255, 255);
                 this.DefaultCamera.Zoom = 2;
 
-                JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.UseDepth(true);
-
                 var level = this.ResourceManager.Load(JuiceboxEngine.Level, "Levels/CityMap.json");
                 level.LoadToScene(this);
 
                 this._backgroundAudio = this.GetGameObjectByName("Music").GetComponent(JuiceboxEngine.Audio.AudioComponent);
+                this._backgroundAudio.Volume = 0.5;
 
                 this.PhysicsWorld.Gravity = new JuiceboxEngine.Math.Vector2.$ctor3(0, 0);
                 var wallPlayerMaterial = this.PhysicsWorld.CreateContactMaterial(new JuiceboxEngine.Physics.P2Material.$ctor1("wall"), new JuiceboxEngine.Physics.P2Material.$ctor1("player"));
@@ -265,6 +648,8 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._controller = new LD51.PlayerController(this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent));
                 this._playerSprite = this._player.GetComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
 
+
+                this._bonkAudio = this.AddGameObject$1("Bonk").AddComponent(JuiceboxEngine.Audio.AudioComponent);
 
                 this._arrow = this.AddGameObject$1("Arrow");
                 this._arrowSprite = this._arrow.AddComponent(JuiceboxEngine.Components.SpriteComponent);
@@ -382,6 +767,11 @@ H5.assembly("LD51", function ($asm, globals) {
                                         })));
 
                                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ShakeCamera(3, 0.5));
+
+                                        if (this._hasControl) {
+                                            this._bonkAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/FX/Hit{0}.mp3", [JuiceboxEngine.Math.RandomNumbers.NextRange(1, 7)]));
+                                            this._bonkAudio.Play();
+                                        }
 
                                         this._playerSprite.Color = new JuiceboxEngine.Math.Color.$ctor3(999.0, 999.0, 999.0, 1.0);
                                         $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.1);
@@ -589,6 +979,9 @@ H5.assembly("LD51", function ($asm, globals) {
                                         this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).AngularVelocity = 30.0;
                                         this._controller.speed = 0;
 
+                                        this._backgroundAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/FX/GameOver.mp3");
+                                        this._backgroundAudio.Loop = false;
+                                        this._backgroundAudio.Play();
 
                                         $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.ctor(JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, function (x) {
                                             flash.Color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, JuiceboxEngine.Math.JMath.Sin(x * JuiceboxEngine.Math.JMath.PI));
@@ -602,7 +995,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         return true;
                                 }
                                 case 2: {
-                                    this._bigTextUI.ShowText("Game Over!", 2);
+                                    this._bigTextUI.ShowText("Game Over!", 5);
 
                                         flash.Remove();
 
@@ -818,8 +1211,7 @@ H5.assembly("LD51", function ($asm, globals) {
             maxSpeed: 0,
             reversing: false,
             Drifted: false,
-            _driftTime: 0,
-            tilt: 0
+            _driftTime: 0
         },
         ctors: {
             ctor: function (playerPhysics) {
@@ -919,7 +1311,7 @@ H5.assembly("LD51", function ($asm, globals) {
         main: function Main () {
             var game = new JuiceboxEngine.JuiceboxGame();
 
-            game.Run(new LD51.MainScene(game.ResourceManager));
+            game.Run(new LD51.MainMenu(game.ResourceManager));
         }
     });
 

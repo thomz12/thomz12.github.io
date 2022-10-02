@@ -3,5 +3,6 @@
 	"PixelPerfect": false,
 	"PreloadList": "preload.txt",
 	"Fullscreen": true,
-	"CanvasID": "JuiceboxCanvas"
+	"CanvasID": "JuiceboxCanvas",
+	"PlayfabTitleID": "FCEB7"
 }

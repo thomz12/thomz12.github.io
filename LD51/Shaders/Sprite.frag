@@ -12,9 +12,5 @@ void main()
 	if(color.a == 0.0)
 		discard;
 
-	// Addative mode
-	if(color.a >= 1.5)
-		gl_FragColor = color + v_col;
-	else
-		gl_FragColor = color * v_col;
+	gl_FragColor = color * v_col;
 }

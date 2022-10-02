@@ -24,4 +24,5 @@ Textures/IceCreamRequest.png
 Textures/Arrow.png
 Levels/CityMap.json
 Levels/CityMap-1.png
+Levels/CityMap-5.png
 Fonts/AldotheApache.ttf
