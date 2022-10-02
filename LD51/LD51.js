@@ -452,6 +452,10 @@ H5.assembly("LD51", function ($asm, globals) {
                 close.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -3);
                 close.Text.TextSize = 16;
 
+                close.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this.Remove();
+                }));
+
                 var next = new LD51.Button(this._titlePanel, ">", 2);
                 next.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(48, 60);
                 next.Anchor = JuiceboxEngine.GUI.UIDefaults.CenterRight.$clone();
@@ -519,19 +523,21 @@ H5.assembly("LD51", function ($asm, globals) {
 
                     var leaderboardText = new JuiceboxEngine.GUI.CanvasText(scorePanel);
                     leaderboardText.DisplayText = System.String.format("{0}. {1}", entry.position, entry.displayName);
-                    leaderboardText.Dimensions = scorePanel.Front.Dimensions.$clone();
+                    leaderboardText.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(scorePanel.Front.Dimensions.$clone(), 2);
                     leaderboardText.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
                     leaderboardText.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
                     leaderboardText.Font = "AldotheApache";
-                    leaderboardText.TextSize = 24;
+                    leaderboardText.TextSize = 48;
+                    leaderboardText.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
 
                     var leaderboardScore = new JuiceboxEngine.GUI.CanvasText(scorePanel);
                     leaderboardScore.DisplayText = System.String.format("{0}", [entry.value]);
-                    leaderboardScore.Dimensions = scorePanel.Front.Dimensions.$clone();
+                    leaderboardScore.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(scorePanel.Front.Dimensions.$clone(), 2);
                     leaderboardScore.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
                     leaderboardScore.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Right;
                     leaderboardScore.Font = "AldotheApache";
-                    leaderboardScore.TextSize = 24;
+                    leaderboardScore.TextSize = 48;
+                    leaderboardScore.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
 
                     if (System.String.equals(entry.playfabId, JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId)) {
                         leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(153, 229, 80, 255);
@@ -575,7 +581,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _leaderboardUI: null,
             username: null,
             _askUsername: false,
-            _startPlaying: false
+            _startPlaying: false,
+            _leaderboards: null
         },
         ctors: {
             ctor: function (manager) {
@@ -632,12 +639,15 @@ H5.assembly("LD51", function ($asm, globals) {
                     this.Play();
                 }));
 
-                var leaderboards = new LD51.Button(this.GUI.Root, "Leaderboards");
-                leaderboards.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
-                leaderboards.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
-                leaderboards.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -79);
-                leaderboards.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                leaderboards.addOnMouseUp(function (ev) { });
+                this._leaderboards = new LD51.Button(this.GUI.Root, "Leaderboards");
+                this._leaderboards.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
+                this._leaderboards.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                this._leaderboards.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -79);
+                this._leaderboards.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._leaderboards.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this._leaderboardUI = new LD51.LeaderboardUI(this.GUI.Root);
+                }));
+                this._leaderboards.Enabled = false;
 
                 var creditsBtn = new LD51.Button(this.GUI.Root, "Credits");
                 creditsBtn.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
@@ -720,7 +730,7 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._playfabText.DisplayText = "Signed in.";
                         var task = JuiceboxEngine.Playfab.PlayfabManager.Identity.GetDisplayName(JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId);
                         task.addOnTaskCompleted(H5.fn.cacheBind(this, this.GotUsername));
-                        ;
+                        this._leaderboards.Enabled = true;
                         break;
                     case LD50.PlayfabSignin.LoginState.REGISTERING: 
                         this._playfabText.DisplayText = "Registering...";
