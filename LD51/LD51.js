@@ -785,7 +785,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ShakeCamera(3, 0.5));
 
                                         if (this._hasControl) {
-                                            this._bonkAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/FX/Hit{0}.mp3", [JuiceboxEngine.Math.RandomNumbers.NextRange(1, 7)]));
+                                            this._bonkAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/FX/Bop.mp3", null));
                                             this._bonkAudio.Play();
                                         }
 
@@ -951,7 +951,6 @@ H5.assembly("LD51", function ($asm, globals) {
              * @return  {void}
              */
             PreUpdate: function () {
-
                 if (this._hasControl) {
                     this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
                     this._totalTime += JuiceboxEngine.Util.Time.DeltaTime;
@@ -1004,7 +1003,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         this._backgroundAudio.Play();
 
                                         if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
-                                            JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["attempts", "bonks", "score", "deliveries", "deliveries_high", "drifts", "time_played"], System.String), System.Array.init([1, this._bonks, this._score, this._deliveries, this._deliveries, this._controller.TotalDrifts, H5.Int.clip32(this._totalTime)], System.Int32));
+                                            JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["attempts", "bonks", "score", "deliveries", "deliveries_high", "drifts", "drifts_high", "time_played"], System.String), System.Array.init([1, this._bonks, this._score, this._deliveries, this._deliveries, this._controller.TotalDrifts, this._controller.TotalDrifts, H5.Int.clip32(this._totalTime)], System.Int32));
                                         }
 
                                         $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.ctor(JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, function (x) {
