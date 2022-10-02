@@ -378,11 +378,20 @@ H5.assembly("LD51", function ($asm, globals) {
                 ui.UIElement.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 200);
                 ui.UIElement.addOnMouseDown(H5.fn.cacheBind(this, this.ClickPlayer));
 
+                var honk = this._player.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                honk.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/FX/Honk.mp3");
+                honk.Volume = 0.5;
+
                 this._background = this.AddGameObject$1("background");
                 var map = this._background.AddComponent(JuiceboxEngine.Components.TileMapComponent);
                 map.Sprites = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/MainMenuSprites.png");
                 map.TileSize = 64;
                 map.MapData = new JuiceboxEngine.Graphics.Texture2D.$ctor1(1, 1, System.Array.init([0, 0, 0, 0], System.Byte));
+
+                var bgm = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                bgm.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/MainMenu.mp3");
+                bgm.Loop = true;
+                bgm.Play();
 
                 var button = new LD51.Button(this.GUI.Root, "Play!");
                 button.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 74);
@@ -412,6 +421,7 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._playfabText = new JuiceboxEngine.GUI.CanvasText(this.GUI.Root);
                 this._playfabText.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 64);
+                this._playfabText.TextSize = 24;
                 this._playfabText.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
                 this._playfabText.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
                 this._playfabText.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
@@ -423,6 +433,8 @@ H5.assembly("LD51", function ($asm, globals) {
             },
             ClickPlayer: function (ev) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Click());
+                this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Stop();
+                this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Play();
             },
             Click: function () {
                 var $s = 0,
@@ -581,9 +593,11 @@ H5.assembly("LD51", function ($asm, globals) {
             _scoreUI: null,
             _bigTextUI: null,
             _timer: 0,
+            _totalTime: 0,
             _hasControl: false,
             _deliveries: 0,
             _score: 0,
+            _bonks: 0,
             _collided: false,
             _invincible: false,
             _topPanel: null,
@@ -762,7 +776,9 @@ H5.assembly("LD51", function ($asm, globals) {
                         for (;;) {
                             switch ($s) {
                                 case 0: {
-                                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                                    this._bonks = (this._bonks + 1) | 0;
+
+                                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
                                             this._playerSprite.Size = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(1.5, 1.5), new JuiceboxEngine.Math.Vector2.$ctor3(1.0, 1.0), x);
                                         })));
 
@@ -919,6 +935,8 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this.DefaultCamera.GameObject.Transform.Position2D = this._player.Transform.Position2D.$clone();
 
+                this._totalTime = 0;
+
                 this._currentPerson = this.FindPerson(0);
                 this._currentPerson.WantsIceCream();
             },
@@ -933,8 +951,10 @@ H5.assembly("LD51", function ($asm, globals) {
              * @return  {void}
              */
             PreUpdate: function () {
+
                 if (this._hasControl) {
                     this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
+                    this._totalTime += JuiceboxEngine.Util.Time.DeltaTime;
                     this._timerUI.UpdateTime(this._timer);
                 }
 
@@ -982,6 +1002,10 @@ H5.assembly("LD51", function ($asm, globals) {
                                         this._backgroundAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/FX/GameOver.mp3");
                                         this._backgroundAudio.Loop = false;
                                         this._backgroundAudio.Play();
+
+                                        if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
+                                            JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["attempts", "bonks", "score", "deliveries", "deliveries_high", "drifts", "time_played"], System.String), System.Array.init([1, this._bonks, this._score, this._deliveries, this._deliveries, this._controller.TotalDrifts, H5.Int.clip32(this._totalTime)], System.Int32));
+                                        }
 
                                         $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.ctor(JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, function (x) {
                                             flash.Color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, JuiceboxEngine.Math.JMath.Sin(x * JuiceboxEngine.Math.JMath.PI));
@@ -1211,6 +1235,7 @@ H5.assembly("LD51", function ($asm, globals) {
             maxSpeed: 0,
             reversing: false,
             Drifted: false,
+            TotalDrifts: 0,
             _driftTime: 0
         },
         ctors: {
@@ -1236,6 +1261,10 @@ H5.assembly("LD51", function ($asm, globals) {
                     this._driftTime += JuiceboxEngine.Util.Time.DeltaTime;
 
                     if (this._driftTime > 1.0) {
+                        if (!this.Drifted) {
+                            this.TotalDrifts = (this.TotalDrifts + 1) | 0;
+                        }
+
                         this.Drifted = true;
                     }
                 } else {
