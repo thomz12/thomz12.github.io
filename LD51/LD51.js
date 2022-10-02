@@ -397,6 +397,9 @@ H5.assembly("LD51", function ($asm, globals) {
             LEADERBOARD_NAMES: null,
             LEADERBOARD_NAMES_HUMAN: null
         },
+        events: {
+            OnClose: null
+        },
         ctors: {
             init: function () {
                 this.LEADERBOARD_NAMES = System.Array.init(["score", "deliveries_high", "deliveries", "bonks", "drifts_high", "drifts"], System.String);
@@ -453,6 +456,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 close.Text.TextSize = 16;
 
                 close.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    !H5.staticEquals(this.OnClose, null) ? this.OnClose() : null;
                     this.Remove();
                 }));
 
@@ -582,7 +586,9 @@ H5.assembly("LD51", function ($asm, globals) {
             username: null,
             _askUsername: false,
             _startPlaying: false,
-            _leaderboards: null
+            _play: null,
+            _leaderboards: null,
+            _creditsBtn: null
         },
         ctors: {
             ctor: function (manager) {
@@ -631,11 +637,11 @@ H5.assembly("LD51", function ($asm, globals) {
                 bgm.Loop = true;
                 bgm.Play();
 
-                var button = new LD51.Button(this.GUI.Root, "Play!");
-                button.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 74);
-                button.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
-                button.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                button.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                this._play = new LD51.Button(this.GUI.Root, "Play!");
+                this._play.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 74);
+                this._play.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                this._play.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._play.addOnMouseUp(H5.fn.bind(this, function (ev) {
                     this.Play();
                 }));
 
@@ -646,15 +652,26 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._leaderboards.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._leaderboards.addOnMouseUp(H5.fn.bind(this, function (ev) {
                     this._leaderboardUI = new LD51.LeaderboardUI(this.GUI.Root);
+                    this._leaderboardUI.addOnClose(H5.fn.bind(this, function () {
+                        this._play.Enabled = true;
+                        this._leaderboards.Enabled = true;
+                        this._creditsBtn.Enabled = true;
+                        this._playfabText.Enabled = true;
+                    }));
+
+                    this._play.Enabled = false;
+                    this._leaderboards.Enabled = false;
+                    this._creditsBtn.Enabled = false;
+                    this._playfabText.Enabled = false;
                 }));
                 this._leaderboards.Enabled = false;
 
-                var creditsBtn = new LD51.Button(this.GUI.Root, "Credits");
-                creditsBtn.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
-                creditsBtn.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
-                creditsBtn.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -139);
-                creditsBtn.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                creditsBtn.addOnMouseUp(function (ev) { });
+                this._creditsBtn = new LD51.Button(this.GUI.Root, "Credits");
+                this._creditsBtn.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
+                this._creditsBtn.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
+                this._creditsBtn.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -139);
+                this._creditsBtn.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._creditsBtn.addOnMouseUp(function (ev) { });
 
                 var signin = new LD50.PlayfabSignin();
                 signin.AutoLogin();
@@ -670,9 +687,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playfabText.DisplayText = "Connecting to playfab...";
                 this._playfabText.Font = "AldotheApache";
                 this._playfabText.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
-
-
-
             },
             ClickPlayer: function (ev) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Click());
