@@ -892,7 +892,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _vroomAudio: null,
             _bonkAudio: null,
             _backgroundAudio: null,
-            _currentLevel: 0
+            _currentLevel: 0,
+            _isFirst: false
         },
         ctors: {
             /**
@@ -1111,6 +1112,7 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/FX/Bliep{0}.mp3", [this._currentLevel]));
                         this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Play();
                         this._deliveries = (this._deliveries + 1) | 0;
+                        this._isFirst = false;
 
                         var pointStrings = new (System.Collections.Generic.List$1(System.String)).ctor();
                         var points = new (System.Collections.Generic.List$1(System.Int32)).ctor();
@@ -1222,6 +1224,7 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._totalTime = 0;
 
+                this._isFirst = true;
                 this._currentPerson = System.Linq.Enumerable.from(this._people, LD51.PersonComponent).first();
                 this._currentPerson.WantsIceCream();
             },
@@ -1237,9 +1240,12 @@ H5.assembly("LD51", function ($asm, globals) {
              */
             PreUpdate: function () {
                 if (this._hasControl) {
-                    this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
+                    if (!this._isFirst) {
+                        this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
+                        this._timerUI.UpdateTime(this._timer);
+                    }
+
                     this._totalTime += JuiceboxEngine.Util.Time.DeltaTime;
-                    this._timerUI.UpdateTime(this._timer);
                 }
 
                 if (this._timer < 0.0) {
