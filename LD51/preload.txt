@@ -1,6 +1,7 @@
 Sounds/FX/Bliep1.mp3
 Sounds/FX/Bliep2.mp3
 Sounds/FX/Bliep3.mp3
+Sounds/FX/Bop.mp3
 Sounds/FX/Hit1.mp3
 Sounds/FX/Hit2.mp3
 Sounds/FX/Hit3.mp3
