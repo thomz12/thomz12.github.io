@@ -415,7 +415,7 @@ H5.assembly("LD51", function ($asm, globals) {
                     if (this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).Velocity.Length() < 0.1) {
                         person.GiveIceCream();
                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.FocusCamera());
-                        this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Bliep{0}.mp3", [this._currentLevel]));
+                        this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/FX/Bliep{0}.mp3", [this._currentLevel]));
                         this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Play();
                         this._deliveries = (this._deliveries + 1) | 0;
 
