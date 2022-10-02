@@ -208,7 +208,6 @@ H5.assembly("LD51", function ($asm, globals) {
             _people: null,
             _currentPerson: null,
             _backgroundAudio: null,
-            _timerAudio: null,
             _currentLevel: 0
         },
         ctors: {
@@ -254,7 +253,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 level.LoadToScene(this);
 
                 this._backgroundAudio = this.GetGameObjectByName("Music").GetComponent(JuiceboxEngine.Audio.AudioComponent);
-                this._timerAudio = this.GetGameObjectByName("Timer").GetComponent(JuiceboxEngine.Audio.AudioComponent);
 
                 this.PhysicsWorld.Gravity = new JuiceboxEngine.Math.Vector2.$ctor3(0, 0);
                 var wallPlayerMaterial = this.PhysicsWorld.CreateContactMaterial(new JuiceboxEngine.Physics.P2Material.$ctor1("wall"), new JuiceboxEngine.Physics.P2Material.$ctor1("player"));
@@ -546,12 +544,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (this._hasControl) {
                     this._timer -= JuiceboxEngine.Util.Time.DeltaTime;
                     this._timerUI.UpdateTime(this._timer);
-
-                    if (this._timer < 5.0) {
-                        this._timerAudio.Volume = (3.0 - this._timer) / 3.0;
-                    } else {
-                        this._timerAudio.Volume = 0;
-                    }
                 }
 
                 if (this._timer < 0.0) {
@@ -667,10 +659,8 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._currentLevel = level;
 
                 this._backgroundAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Overworld_level_{0}.mp3", [this._currentLevel]));
-                this._timerAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, System.String.format("Sounds/Overworld_timer_{0}.mp3", [this._currentLevel]));
 
                 this._backgroundAudio.Play();
-                this._timerAudio.Play();
             },
             /**
              * Called when the scene is about to be destroyed.
