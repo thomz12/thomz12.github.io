@@ -36,6 +36,7 @@ H5.assembly("LD51", function ($asm, globals) {
             _hasControl: false,
             _deliveries: 0,
             _score: 0,
+            _collided: false,
             _topPanel: null,
             _bottomPanel: null,
             _people: null,
@@ -123,8 +124,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._timerUI.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -8);
 
                 this._scoreUI = new LD51.ScoreUI(this.GUI.Root);
-                this._scoreUI.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
-                this._scoreUI.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
 
                 this.StartGame();
             },
@@ -135,7 +134,8 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (this._hasControl) {
                     if (System.String.equals(otherBody.GameObject.Name, "Person")) {
                         this.TryGiveIceCream(otherBody.GameObject.GetComponent(LD51.PersonComponent));
-                    } else if (System.String.equals(otherBody.GameObject.Name, "Restock")) {
+                    } else {
+                        this._collided = true;
                     }
                 }
             },
@@ -143,23 +143,60 @@ H5.assembly("LD51", function ($asm, globals) {
                 if (person.WantsIcecream) {
                     if (this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).Velocity.Length() < 0.1) {
                         person.GiveIceCream();
-                        this._timer = LD51.MainScene.ICE_SMELT_TIME;
                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.FocusCamera());
                         this._player.GetComponent(JuiceboxEngine.Audio.AudioComponent).Play();
                         this._deliveries = (this._deliveries + 1) | 0;
 
+                        var pointStrings = new (System.Collections.Generic.List$1(System.String)).ctor();
+                        var points = new (System.Collections.Generic.List$1(System.Int32)).ctor();
+
+                        pointStrings.add("Delivery");
+                        points.add(100);
+
+                        if (this._timer > 6.0) {
+                            pointStrings.add("Speed bonus!");
+                            points.add(20);
+                        }
+
+                        if (this._timer < 0.1) {
+                            pointStrings.add("Last moment!");
+                            points.add(20);
+                        } else if (this._timer < 1.0) {
+                            pointStrings.add("Just on time!");
+                            points.add(10);
+                        } else if (this._timer < 2.0) {
+                            pointStrings.add("Cutting it close!");
+                            points.add(5);
+                        }
+
+                        if (this._controller.Drifted) {
+                            pointStrings.add("Nice drift!");
+                            points.add(10);
+                        }
+                        this._controller.ResetDrift();
+
                         if (this._deliveries === 10) {
+                            pointStrings.add("LEVEL UP!");
+                            points.add(50);
+
                             this.PlayLevelAudio(2);
                         } else if (this._deliveries === 20) {
+                            pointStrings.add("LEVEL UP!");
+                            points.add(50);
+
                             this.PlayLevelAudio(3);
                         }
 
+                        if (!this._collided) {
+                            pointStrings.add("Clean drive!");
+                            points.add(25);
+                        }
+                        this._collided = false;
 
-                        var addedScore = 100;
+                        this._score = (this._score + (System.Linq.Enumerable.from(points, System.Int32).sum())) | 0;
+                        this._scoreUI.AddScore(pointStrings.ToArray(), points.ToArray());
 
-                        this._score = (this._score + addedScore) | 0;
-                        this._scoreUI.AddScore(addedScore);
-
+                        this._timer = LD51.MainScene.ICE_SMELT_TIME;
                         this._currentPerson = this.FindPerson(((H5.Int.mul(this._deliveries, 50) + 100) | 0));
                         this._currentPerson.WantsIceCream();
                     }
@@ -446,6 +483,8 @@ H5.assembly("LD51", function ($asm, globals) {
             speed: 0,
             maxSpeed: 0,
             reversing: false,
+            Drifted: false,
+            _driftTime: 0,
             tilt: 0
         },
         ctors: {
@@ -465,6 +504,16 @@ H5.assembly("LD51", function ($asm, globals) {
             Update: function () {
                 if (this._playerPhysics.Velocity.Length() < 2) {
                     this.speed = 0;
+                }
+
+                if (JuiceboxEngine.Math.JMath.Abs(this._playerSprite.Rotation) > 0.3926991) {
+                    this._driftTime += JuiceboxEngine.Util.Time.DeltaTime;
+
+                    if (this._driftTime > 1.0) {
+                        this.Drifted = true;
+                    }
+                } else {
+                    this._driftTime = 0;
                 }
 
                 if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp") || JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
@@ -511,10 +560,14 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playerPhysics.Velocity = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(0, this.speed), this._playerPhysics.Rotation);
 
                 if (!this.reversing) {
-                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8 * (this.speed / this.maxSpeed);
+                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8 * (this._playerPhysics.Velocity.Length() / this.maxSpeed);
                 } else {
                     this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, 0, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8;
                 }
+            },
+            ResetDrift: function () {
+                this._driftTime = 0;
+                this.Drifted = false;
             }
         }
     });
@@ -547,15 +600,18 @@ H5.assembly("LD51", function ($asm, globals) {
             ctor: function (parent) {
                 this.$initialize();
                 JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
-                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 128);
+                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, parent.Dimensions.Y / 2);
+                this.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
 
                 this._score = 0;
+                this._displayedScore = 0;
 
                 this._text = new JuiceboxEngine.GUI.CanvasText(this);
                 this._text.Dimensions = this.Dimensions.$clone();
                 this._text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
                 this._text.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
-                this._text.DisplayText = "";
+                this._text.DisplayText = "0";
                 this._text.Font = "AldotheApache";
                 this._text.TextSize = 128;
                 this._text.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
@@ -564,10 +620,137 @@ H5.assembly("LD51", function ($asm, globals) {
             }
         },
         methods: {
-            AddScore: function (score) {
-                this._score = (this._score + score) | 0;
+            AddScore: function (texts, scores) {
+                this._score = (this._score + (System.Linq.Enumerable.from(scores, System.Int32).sum())) | 0;
 
-                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ScoreAnimation(score));
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.AnimateScoreText(texts, scores));
+            },
+            AnimateScoreText: function (text, scores) {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    canvasTexts,
+                    i,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    canvasTexts = System.Array.init(text.length, null, JuiceboxEngine.GUI.CanvasText);
+
+                                        i = 0;
+                                        $s = 1;
+                                        continue;
+                                }
+                                case 1: {
+                                    if ( i < text.length ) {
+                                            $s = 2;
+                                            continue;
+                                        }
+                                    $s = 5;
+                                    continue;
+                                }
+                                case 2: {
+                                    canvasTexts[i] = new JuiceboxEngine.GUI.CanvasText(this);
+                                        canvasTexts[i].DisplayText = System.String.format("{0} +{1}", text[i], scores[i]);
+                                        canvasTexts[i].TextSize = 32;
+                                        canvasTexts[i].HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                                        canvasTexts[i].VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                                        canvasTexts[i].Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 32);
+                                        canvasTexts[i].Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        canvasTexts[i].Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        canvasTexts[i].Font = "AldotheApache";
+
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(this.ShowScoreText(canvasTexts[i], H5.Int.mul((((((text.length - i) | 0) - 1) | 0)), 32)));
+                                        $s = 3;
+                                        return true;
+                                }
+                                case 3: {
+                                    $s = 4;
+                                    continue;
+                                }
+                                case 4: {
+                                    i = (i + 1) | 0;
+                                    $s = 1;
+                                    continue;
+                                }
+                                case 5: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(1.0);
+                                        $s = 6;
+                                        return true;
+                                }
+                                case 6: {
+                                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ScoreAnimation(System.Linq.Enumerable.from(scores, System.Int32).sum()));
+
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.25, function (x) {
+                                            for (var i1 = 0; i1 < canvasTexts.length; i1 = (i1 + 1) | 0) {
+                                                canvasTexts[i1].Scale = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Vector2.Zero.$clone(), x);
+                                                canvasTexts[i1].Anchor = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone(), JuiceboxEngine.GUI.UIDefaults.Centered.$clone(), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
+                                            }
+                                        }));
+                                        $s = 7;
+                                        return true;
+                                }
+                                case 7: {
+                                    for (var i1 = 0; i1 < canvasTexts.length; i1 = (i1 + 1) | 0) {
+                                            canvasTexts[i1].Remove();
+                                        }
+
+                                        canvasTexts = null;
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
+            },
+            ShowScoreText: function (text, height) {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, function (x) {
+                                            text.Scale = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(0, 0), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
+                                        }));
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, function (x) {
+                                            text.Position = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.Math.Vector2.Zero.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, height), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
+                                        }));
+                                        $s = 2;
+                                        return true;
+                                }
+                                case 2: {
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
             },
             ScoreAnimation: function (addedScore) {
                 var $s = 0,
@@ -615,6 +798,10 @@ H5.assembly("LD51", function ($asm, globals) {
                     }
                 }));
                 return $en;
+            },
+            UpdateElement: function () {
+                JuiceboxEngine.GUI.EmptyUIElement.prototype.UpdateElement.call(this);
+                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, this.Parent.Dimensions.Y / 2);
             },
             SetScoreDisplay: function (score) {
                 this._text.DisplayText = score;
