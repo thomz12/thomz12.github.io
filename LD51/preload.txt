@@ -9,7 +9,9 @@ Sounds/FX/Hit5.mp3
 Sounds/FX/Hit6.mp3
 Sounds/FX/CarGoesVroom.mp3
 Sounds/FX/CarGoesVroomBackwards.mp3
+Sounds/FX/Honk.mp3
 Sounds/FX/LevelUp
+Sounds/FX/GameOver
 Sounds/Overworld_level_1.mp3
 Sounds/Overworld_level_2.mp3
 Sounds/Overworld_level_3.mp3
