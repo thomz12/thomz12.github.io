@@ -207,6 +207,7 @@ H5.assembly("LD51", function ($asm, globals) {
             _bottomPanel: null,
             _people: null,
             _currentPerson: null,
+            _vroomAudio: null,
             _backgroundAudio: null,
             _currentLevel: 0
         },
@@ -263,6 +264,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent).addOnCollisionStart(H5.fn.cacheBind(this, this.PlayerCollisionStart));
                 this._controller = new LD51.PlayerController(this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent));
                 this._playerSprite = this._player.GetComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
+
 
                 this._arrow = this.AddGameObject$1("Arrow");
                 this._arrowSprite = this._arrow.AddComponent(JuiceboxEngine.Components.SpriteComponent);
