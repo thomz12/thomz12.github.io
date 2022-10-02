@@ -403,7 +403,7 @@ H5.assembly("LD51", function ($asm, globals) {
         ctors: {
             init: function () {
                 this.LEADERBOARD_NAMES = System.Array.init(["score", "deliveries_high", "deliveries", "bonks", "drifts_high", "drifts"], System.String);
-                this.LEADERBOARD_NAMES_HUMAN = System.Array.init(["Highscores", "Ice sold", "Total ice sold", "Crashes", "Drifts", "Total Drifts"], System.String);
+                this.LEADERBOARD_NAMES_HUMAN = System.Array.init(["Highscores", "Ice sold", "Total ice sold", "Total Crashes", "Drifts", "Total Drifts"], System.String);
             },
             ctor: function (parent) {
                 this.$initialize();
@@ -586,6 +586,7 @@ H5.assembly("LD51", function ($asm, globals) {
             username: null,
             _askUsername: false,
             _startPlaying: false,
+            _nameChange: false,
             _play: null,
             _leaderboards: null,
             _creditsBtn: null
@@ -687,6 +688,10 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playfabText.DisplayText = "Connecting to playfab...";
                 this._playfabText.Font = "AldotheApache";
                 this._playfabText.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+                this._playfabText.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this._nameChange = true;
+                    this.AskUsername(null);
+                }));
             },
             ClickPlayer: function (ev) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Click());
@@ -812,7 +817,10 @@ H5.assembly("LD51", function ($asm, globals) {
             AskUsername: function (task) {
                 if (task != null) {
                     if (task.Success) {
-                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAnimation());
+                        if (!this._nameChange) {
+                            JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAnimation());
+                        }
+                        this._nameChange = false;
                     }
                 } else {
                     var defaultName = System.String.format("Ice Driver #{0}", [JuiceboxEngine.Math.RandomNumbers.NextRange(1000, 10000)]);

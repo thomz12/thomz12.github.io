@@ -4,5 +4,6 @@
 	"PreloadList": "preload.txt",
 	"Fullscreen": true,
 	"CanvasID": "JuiceboxCanvas",
-	"PlayfabTitleID": "FCEB7"
+	"PlayfabTitleID": "FCEB7",
+	"SplashText": "Gelato Drift"
 }
