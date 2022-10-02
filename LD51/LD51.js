@@ -261,12 +261,17 @@ H5.assembly("LD51", function ($asm, globals) {
         fields: {
             _background: null,
             _foreground: null,
-            _text: null
+            Text: null,
+            _offset: 0
         },
         ctors: {
-            ctor: function (parent, text) {
+            ctor: function (parent, text, offset) {
+                if (offset === void 0) { offset = 5; }
+
                 this.$initialize();
                 JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this._offset = offset;
+
                 this.InputType = JuiceboxEngine.GUI.UIInput.SELF;
 
                 this.addOnMouseStay(H5.fn.cacheBind(this, this.MouseStay));
@@ -279,22 +284,22 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._background.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._background.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(290, 64);
                 this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
-                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, -5);
+                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(offset, ((-offset) | 0));
 
                 this._foreground = new JuiceboxEngine.GUI.Panel(this);
                 this._foreground.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._foreground.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._foreground.Dimensions = this._background.Dimensions.$clone();
                 this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
-                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(-5, 5);
+                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(((-offset) | 0), offset);
 
-                this._text = new JuiceboxEngine.GUI.CanvasText(this._foreground);
-                this._text.Dimensions = this._foreground.Dimensions.$clone();
-                this._text.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
-                this._text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
-                this._text.DisplayText = text;
-                this._text.Font = "AldotheApache";
-                this._text.TextSize = 32;
+                this.Text = new JuiceboxEngine.GUI.CanvasText(this._foreground);
+                this.Text.Dimensions = this._foreground.Dimensions.$clone();
+                this.Text.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                this.Text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                this.Text.DisplayText = text;
+                this.Text.Font = "AldotheApache";
+                this.Text.TextSize = 32;
             }
         },
         methods: {
@@ -303,7 +308,7 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._background.Dimensions = JuiceboxEngine.Math.Vector2.op_Subtraction(this.Dimensions.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(10, 10));
                 this._foreground.Dimensions = this._background.Dimensions.$clone();
-                this._text.Dimensions = this._foreground.Dimensions.$clone();
+                this.Text.Dimensions = this._foreground.Dimensions.$clone();
             },
             MouseUp: function (ev) {
                 this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
@@ -318,8 +323,8 @@ H5.assembly("LD51", function ($asm, globals) {
                 var startFront = this._foreground.Position.$clone();
 
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, H5.fn.bind(this, function (x) {
-                    this._background.Position = JuiceboxEngine.Math.Vector2.Interpolate(startBack.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(5, -5), x);
-                    this._foreground.Position = JuiceboxEngine.Math.Vector2.Interpolate(startFront.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-5, 5), x);
+                    this._background.Position = JuiceboxEngine.Math.Vector2.Interpolate(startBack.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(this._offset, -this._offset), x);
+                    this._foreground.Position = JuiceboxEngine.Math.Vector2.Interpolate(startFront.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-this._offset, this._offset), x);
 
                 })));
 
@@ -331,8 +336,232 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 var pos = JuiceboxEngine.Math.Vector2.op_Division(mouseEvent.position.$clone(), this.Dimensions.$clone());
 
-                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(5, -5, pos.X), JuiceboxEngine.Math.JMath.Interpolate(5, -5, pos.Y));
-                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(-5, 5, pos.X), JuiceboxEngine.Math.JMath.Interpolate(-5, 5, pos.Y));
+                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.Y));
+                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.Y));
+            }
+        }
+    });
+
+    H5.define("LD51.LD51Panel", {
+        inherits: [JuiceboxEngine.GUI.EmptyUIElement],
+        fields: {
+            Front: null,
+            Back: null,
+            offset: 0
+        },
+        ctors: {
+            ctor: function (parent, offset, dimensions) {
+                this.$initialize();
+                JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this.offset = offset;
+
+                this.Dimensions = dimensions.$clone();
+
+                this.Back = new JuiceboxEngine.GUI.Panel(this);
+                this.Back.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomRight.$clone();
+                this.Back.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomRight.$clone();
+                this.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+
+                this.Front = new JuiceboxEngine.GUI.Panel(this);
+                this.Front.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                this.Front.Anchor = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                this.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+
+                this.UpdateDimensions();
+            }
+        },
+        methods: {
+            UpdateDimensions: function () {
+                this.Back.Dimensions = JuiceboxEngine.Math.Vector2.op_Subtraction(this.Dimensions.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(this.offset, this.offset));
+                this.Front.Dimensions = this.Back.Dimensions.$clone();
+            },
+            UpdateElement: function () {
+                JuiceboxEngine.GUI.EmptyUIElement.prototype.UpdateElement.call(this);
+
+                this.UpdateDimensions();
+            }
+        }
+    });
+
+    H5.define("LD51.LeaderboardUI", {
+        inherits: [JuiceboxEngine.GUI.EmptyUIElement],
+        fields: {
+            _title: null,
+            _titlePanel: null,
+            _bodyPanel: null,
+            _scrollArea: null,
+            _loading: null,
+            _loadingRoutine: null,
+            maxScroll: 0,
+            _curBoard: 0,
+            LEADERBOARD_NAMES: null,
+            LEADERBOARD_NAMES_HUMAN: null
+        },
+        ctors: {
+            init: function () {
+                this.LEADERBOARD_NAMES = System.Array.init(["score", "deliveries_high", "deliveries", "bonks", "drifts_high", "drifts"], System.String);
+                this.LEADERBOARD_NAMES_HUMAN = System.Array.init(["Highscores", "Ice sold", "Total ice sold", "Crashes", "Drifts", "Total Drifts"], System.String);
+            },
+            ctor: function (parent) {
+                this.$initialize();
+                JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this._curBoard = 0;
+
+                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 450);
+                this.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                this._titlePanel = new LD51.LD51Panel(this, 4, new JuiceboxEngine.Math.Vector2.$ctor3(270, 64));
+                this._titlePanel.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._titlePanel.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+
+                this._title = new JuiceboxEngine.GUI.CanvasText(this._titlePanel.Front);
+                this._title.Dimensions = this._titlePanel.Front.Dimensions.$clone();
+                this._title.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                this._title.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                this._title.DisplayText = "Leaderboard";
+                this._title.Font = "AldotheApache";
+                this._title.TextSize = 32;
+
+                this._bodyPanel = new LD51.LD51Panel(this._titlePanel, 3, new JuiceboxEngine.Math.Vector2.$ctor3(290, this.Dimensions.Y - this._titlePanel.Dimensions.Y));
+                this._bodyPanel.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this._bodyPanel.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this._bodyPanel.Front.UseScissor = true;
+                this._bodyPanel.Front.InputType = JuiceboxEngine.GUI.UIInput.SELF;
+                this._bodyPanel.Front.addOnMouseHeld(H5.fn.cacheBind(this, this.MouseMove));
+
+                this._scrollArea = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this._bodyPanel.Front);
+                this._scrollArea.Dimensions = this._bodyPanel.Front.Dimensions.$clone();
+                this._scrollArea.Anchor = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                this._scrollArea.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+
+                this._loading = new JuiceboxEngine.GUI.Image(this._bodyPanel);
+                this._loading.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(128, 128);
+                this._loading.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._loading.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._loading.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/IceIcon.png");
+
+                this._loadingRoutine = JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.LinearRepeat(2.0, H5.fn.bind(this, function (x) {
+                    this._loading.Rotation = -x * JuiceboxEngine.Math.JMath.PI * 2;
+                })));
+
+                var close = new LD51.Button(this._bodyPanel, "close", 2);
+                close.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(150, 32);
+                close.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+                close.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                close.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -3);
+                close.Text.TextSize = 16;
+
+                var next = new LD51.Button(this._titlePanel, ">", 2);
+                next.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(48, 60);
+                next.Anchor = JuiceboxEngine.GUI.UIDefaults.CenterRight.$clone();
+                next.Pivot = JuiceboxEngine.GUI.UIDefaults.CenterLeft.$clone();
+                next.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -3);
+                next.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this._curBoard = (((this._curBoard + 1) | 0)) % this.LEADERBOARD_NAMES.length;
+                    this.LoadLeaderboard(this._curBoard);
+                }));
+
+                var prev = new LD51.Button(this._titlePanel, "<", 2);
+                prev.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(48, 60);
+                prev.Anchor = JuiceboxEngine.GUI.UIDefaults.CenterLeft.$clone();
+                prev.Pivot = JuiceboxEngine.GUI.UIDefaults.CenterRight.$clone();
+                prev.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -3);
+                prev.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this._curBoard = (this._curBoard - 1) | 0;
+
+                    if (this._curBoard < 0) {
+                        this._curBoard = (this.LEADERBOARD_NAMES.length - 1) | 0;
+                    }
+
+                    this.LoadLeaderboard(this._curBoard);
+                }));
+
+                this.LoadLeaderboard(this._curBoard);
+            }
+        },
+        methods: {
+            MouseMove: function (ev) {
+                var mouseEvent = ev;
+                this._scrollArea.Position = JuiceboxEngine.Math.Vector2.op_Subtraction(this._scrollArea.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Input.InputManager.Instance.MouseDelta.Y * JuiceboxEngine.Graphics.GraphicsManager.Instance.Height));
+                this._scrollArea.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Math.JMath.Clamp$1(this._scrollArea.Position.Y, 0, this.maxScroll));
+            },
+            LoadLeaderboard: function (index) {
+                var pfName = this.LEADERBOARD_NAMES[index];
+                this._title.DisplayText = this.LEADERBOARD_NAMES_HUMAN[index];
+
+                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard(pfName, 0, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
+                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboardAroundPlayer(pfName, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
+
+                this.ClearAndLoad();
+            },
+            GotLeaderboard: function (task) {
+                this.ShowLeaderboardData(task.Leaderboard);
+            },
+            ShowLeaderboardData: function (leaderboard) {
+                this._loading.Enabled = false;
+
+                this.maxScroll = 5;
+
+                for (var i = 0; i < leaderboard.Entries.Count; i = (i + 1) | 0) {
+                    this.maxScroll += 33;
+
+                    var entry = leaderboard.Entries.getItem(i).$clone();
+
+                    var scorePanel = new LD51.LD51Panel(this._scrollArea, 2, new JuiceboxEngine.Math.Vector2.$ctor3(280, 32));
+                    scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
+                    scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                    scorePanel.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                    scorePanel.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                    scorePanel.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, ((H5.Int.mul(((-i) | 0), 33) - 5) | 0));
+                    scorePanel.Front.Enabled = entry.position < 4;
+                    scorePanel.Back.Enabled = entry.position < 4;
+
+                    var leaderboardText = new JuiceboxEngine.GUI.CanvasText(scorePanel);
+                    leaderboardText.DisplayText = System.String.format("{0}. {1}", entry.position, entry.displayName);
+                    leaderboardText.Dimensions = scorePanel.Front.Dimensions.$clone();
+                    leaderboardText.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                    leaderboardText.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                    leaderboardText.Font = "AldotheApache";
+                    leaderboardText.TextSize = 24;
+
+                    var leaderboardScore = new JuiceboxEngine.GUI.CanvasText(scorePanel);
+                    leaderboardScore.DisplayText = System.String.format("{0}", [entry.value]);
+                    leaderboardScore.Dimensions = scorePanel.Front.Dimensions.$clone();
+                    leaderboardScore.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                    leaderboardScore.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Right;
+                    leaderboardScore.Font = "AldotheApache";
+                    leaderboardScore.TextSize = 24;
+
+                    if (System.String.equals(entry.playfabId, JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId)) {
+                        leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(153, 229, 80, 255);
+                        leaderboardScore.Color = new JuiceboxEngine.Math.Color.$ctor2(153, 229, 80, 255);
+                    }
+
+                    if (entry.position === 1) {
+                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(251, 242, 54, 255);
+                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(223, 113, 38, 255);
+                    } else if (entry.position === 2) {
+                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(203, 219, 252, 255);
+                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(155, 173, 183, 255);
+                    } else if (entry.position === 3) {
+                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(143, 86, 59, 255);
+                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(102, 57, 49, 255);
+                    }
+                }
+
+                this.maxScroll -= this._bodyPanel.Dimensions.Y;
+                if (this.maxScroll < 0) {
+                    this.maxScroll = 0;
+                }
+            },
+            ClearAndLoad: function () {
+                this._scrollArea.RemoveAllChildren();
+                this._loading.Enabled = true;
+            },
+            Destroy: function () {
+                JuiceboxEngine.GUI.EmptyUIElement.prototype.Destroy.call(this);
+                JuiceboxEngine.Coroutines.CoroutineManager.StopCoroutine(this._loadingRoutine);
             }
         }
     });
@@ -343,8 +572,10 @@ H5.assembly("LD51", function ($asm, globals) {
             _player: null,
             _background: null,
             _playfabText: null,
+            _leaderboardUI: null,
             username: null,
-            askUsername: false
+            _askUsername: false,
+            _startPlaying: false
         },
         ctors: {
             ctor: function (manager) {
@@ -430,6 +661,8 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playfabText.Font = "AldotheApache";
                 this._playfabText.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
 
+
+
             },
             ClickPlayer: function (ev) {
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.Click());
@@ -504,18 +737,58 @@ H5.assembly("LD51", function ($asm, globals) {
             },
             Play: function () {
                 if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
-                    if (this.askUsername) {
+                    if (this._askUsername) {
                         this.AskUsername(null);
                         return;
                     }
                 }
 
-                this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+                JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAnimation());
+            },
+            PlayAnimation: function () {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    startRot,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    this._startPlaying = true;
+                                        startRot = this._player.Transform.Rotation2D;
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, H5.fn.bind(this, function (x) {
+                                            this._player.Transform.Rotation2D = JuiceboxEngine.Math.JMath.AngleInterpolate(startRot, -1.5707964, x);
+                                        })));
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(1.0, H5.fn.bind(this, function (x) {
+                                            this._player.Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(this._player.Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(1280 * JuiceboxEngine.Util.Time.DeltaTime, 0));
+                                        })));
+
+                                        this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
             },
             AskUsername: function (task) {
                 if (task != null) {
                     if (task.Success) {
-                        this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+                        JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.PlayAnimation());
                     }
                 } else {
                     var defaultName = System.String.format("Ice Driver #{0}", [JuiceboxEngine.Math.RandomNumbers.NextRange(1000, 10000)]);
@@ -544,14 +817,16 @@ H5.assembly("LD51", function ($asm, globals) {
                     if (this.username != null) {
                         this._playfabText.DisplayText = System.String.format("Signed in, welcome {0}", [this.username]);
                     } else {
-                        this.askUsername = true;
+                        this._askUsername = true;
                     }
                 }
             },
             PreUpdate: function () {
                 var $t;
-                $t = this._player.Transform;
-                $t.Rotation2D += 0.7853982 * JuiceboxEngine.Util.Time.DeltaTime;
+                if (!this._startPlaying) {
+                    $t = this._player.Transform;
+                    $t.Rotation2D += 0.7853982 * JuiceboxEngine.Util.Time.DeltaTime;
+                }
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(16, 16), JuiceboxEngine.Util.Time.DeltaTime));
             },
             PostUpdate: function () {
@@ -1021,6 +1296,13 @@ H5.assembly("LD51", function ($asm, globals) {
                                     this._bigTextUI.ShowText("Game Over!", 5);
 
                                         flash.Remove();
+
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(6.0);
+                                        $s = 3;
+                                        return true;
+                                }
+                                case 3: {
+                                    this.SceneManager.SwitchToScene(new LD51.MainMenu(this.ResourceManager));
 
                                 }
                                 default: {
