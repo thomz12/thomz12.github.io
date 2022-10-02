@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.3.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.4.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -1506,8 +1506,9 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                     return lines.ToArray();
                 },
-                GetTextTexture: function (text, font, textSize, maxWidth, alignment, color, textBounds, shadowOffset) {
+                GetTextTexture: function (text, font, textSize, maxWidth, alignment, color, textBounds, shadowColor, shadowOffset, shadowBlur) {
                     if (shadowOffset === void 0) { shadowOffset = new JuiceboxEngine.Math.Vector2(); }
+                    if (shadowBlur === void 0) { shadowBlur = 3.0; }
                     JuiceboxEngine.Fonts.CanvasTextRenderer._context.font = System.String.format("{0}px {1}", textSize, font);
 
                     JuiceboxEngine.Fonts.CanvasTextRenderer.SetAlignment(alignment, maxWidth);
@@ -1535,8 +1536,8 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                     JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowOffsetX = shadowOffset.X;
                     JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowOffsetY = shadowOffset.Y;
-                    JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowColor = "rgba(0, 0, 0, 0.3)";
-                    JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowBlur = 3;
+                    JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowColor = System.String.format("rgba({0}, {1}, {2}, {3})", shadowColor.R, shadowColor.G, shadowColor.B, shadowColor.A);
+                    JuiceboxEngine.Fonts.CanvasTextRenderer._context.shadowBlur = shadowBlur;
 
                     for (var i = 0; i < lines.length; i = (i + 1) | 0) {
                         textY = H5.Int.mul(i, textSize);
@@ -11367,7 +11368,25 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
              * @memberof JuiceboxEngine.Particles.Particle
              * @type number
              */
-            lifeTime: 0
+            lifeTime: 0,
+            /**
+             * Initial life time.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Particles.Particle
+             * @type number
+             */
+            initalLifeTime: 0,
+            /**
+             * 0.0 - 1.0 particle life.
+             *
+             * @instance
+             * @public
+             * @memberof JuiceboxEngine.Particles.Particle
+             * @type number
+             */
+            lifeProgress: 0
         },
         ctors: {
             init: function () {
@@ -17103,7 +17122,8 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
             _horizontalAlignment: 0,
             _verticalAlignment: 0,
             _font: null,
-            _texture: null
+            _texture: null,
+            _shadowColor: null
         },
         props: {
             /**
@@ -17201,9 +17221,21 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                     this._font = value;
                     this.ForceUpdate();
                 }
+            },
+            ShadowColor: {
+                get: function () {
+                    return this._shadowColor.$clone();
+                },
+                set: function (value) {
+                    this._shadowColor = value.$clone();
+                    this.ForceUpdate();
+                }
             }
         },
         ctors: {
+            init: function () {
+                this._shadowColor = new JuiceboxEngine.Math.Color();
+            },
             /**
              * Rich UI constructor.
              *
@@ -17221,6 +17253,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 this._font = "arial";
                 this._displayText = "";
                 this._horizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                this._shadowColor = new JuiceboxEngine.Math.Color.$ctor3(0.0, 0.0, 0.0, 0.3);
             }
         },
         methods: {
@@ -17233,7 +17266,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 }
                 var textBounds = { v : new JuiceboxEngine.Math.RectangleF() };
 
-                this._texture = JuiceboxEngine.Fonts.CanvasTextRenderer.GetTextTexture(this._displayText, this._font, this._textSize, H5.Int.clip32(this.Bounds.Width), this._horizontalAlignment, this.Color.$clone(), textBounds);
+                this._texture = JuiceboxEngine.Fonts.CanvasTextRenderer.GetTextTexture(this._displayText, this._font, this._textSize, H5.Int.clip32(this.Bounds.Width), this._horizontalAlignment, this.Color.$clone(), textBounds, this._shadowColor.$clone());
                 this._command.SetShaderValue("texture", this._texture);
                 this._command.VertexBuffer.UpdateData(this.GenerateVertexData(textBounds.v.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(this._texture.Width, this._texture.Height)));
             },
@@ -21723,6 +21756,8 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
 
                     particle.v.lifeTime -= JuiceboxEngine.Util.Time.DeltaTime;
 
+                    particle.v.lifeProgress = (particle.v.initalLifeTime - particle.v.lifeTime) / particle.v.initalLifeTime;
+
                     if (particle.v.lifeTime <= 0.0) {
                         i = (i - 1) | 0;
                         this._particles.remove(particle.v);
@@ -21781,6 +21816,9 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 particle.color = this.Color.$clone();
 
                 !H5.staticEquals(this.OnRequestParticle, null) ? this.OnRequestParticle(particle) : null;
+
+                particle.initalLifeTime = particle.lifeTime;
+                particle.lifeProgress = 0;
 
                 if (particle != null) {
                     particle.position = JuiceboxEngine.Math.Vector2.op_Addition(particle.position.$clone(), this.GameObject.Transform.Position2D.$clone());

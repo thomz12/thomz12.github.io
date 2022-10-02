@@ -915,7 +915,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _bonkAudio: null,
             _backgroundAudio: null,
             _currentLevel: 0,
-            _isFirst: false
+            _isFirst: false,
+            _driftSmoke: null
         },
         ctors: {
             /**
@@ -970,6 +971,21 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._controller = new LD51.PlayerController(this._player.GetComponent(JuiceboxEngine.Physics.P2PhysicsComponent));
                 this._playerSprite = this._player.GetComponent(JuiceboxEngine.Components.LayeredSpriteComponent);
 
+                this._driftSmoke = this._player.AddComponent(JuiceboxEngine.Particles.ContinuousParticleComponent);
+                this._driftSmoke.Color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, 1.0);
+                this._driftSmoke.EmmisionRate = 0.01;
+                this._driftSmoke.Gravity = new JuiceboxEngine.Math.Vector2.$ctor3(0, 1.0);
+                this._driftSmoke.addOnRequestParticle(function (particle) {
+                    particle.size = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.RandomNumbers.NextRange$1(4.0, 6.0));
+                    particle.velocity = new JuiceboxEngine.Math.Vector2.$ctor3(0, 0.1);
+                    particle.rotation = JuiceboxEngine.Math.RandomNumbers.NextRange$1(0.0, JuiceboxEngine.Math.JMath.TWO_PI);
+                    particle.lifeTime = JuiceboxEngine.Math.RandomNumbers.NextRange$1(0.5, 1.5);
+                });
+                this._driftSmoke.addOnParticleUpdate(function (particle) {
+                    particle.size = JuiceboxEngine.Math.Vector2.op_Addition(particle.size.$clone(), JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(5, 5), JuiceboxEngine.Util.Time.DeltaTime));
+                    particle.color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, JuiceboxEngine.Math.JMath.Interpolate(1.0, 0.0, particle.lifeProgress));
+                });
+
 
                 this._bonkAudio = this.AddGameObject$1("Bonk").AddComponent(JuiceboxEngine.Audio.AudioComponent);
 
@@ -1002,7 +1018,6 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._bigTextUI = new LD51.BigTextUI(this.GUI.Root);
 
                 this.StartGame();
-
             },
             PersonCreate: function (personComponent) {
                 this._people.add(personComponent);
@@ -1269,6 +1284,8 @@ H5.assembly("LD51", function ($asm, globals) {
 
                     this._totalTime += JuiceboxEngine.Util.Time.DeltaTime;
                 }
+
+                this._driftSmoke.EmmisionRate = this._controller.Drifting && this._hasControl ? 0.01 : 10000;
 
                 if (this._timer < 0.0) {
                     this._timer = 0;
@@ -1554,6 +1571,7 @@ H5.assembly("LD51", function ($asm, globals) {
             maxSpeed: 0,
             reversing: false,
             Drifted: false,
+            Drifting: false,
             TotalDrifts: 0,
             _driftTime: 0
         },
@@ -1577,6 +1595,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 }
 
                 if (JuiceboxEngine.Math.JMath.Abs(this._playerSprite.Rotation) > 0.3926991) {
+                    this.Drifting = true;
                     this._driftTime += JuiceboxEngine.Util.Time.DeltaTime;
 
                     if (this._driftTime > 1.0) {
@@ -1587,6 +1606,7 @@ H5.assembly("LD51", function ($asm, globals) {
                         this.Drifted = true;
                     }
                 } else {
+                    this.Drifting = false;
                     this._driftTime = 0;
                 }
 
