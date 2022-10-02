@@ -490,12 +490,16 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._scrollArea.Position = JuiceboxEngine.Math.Vector2.op_Subtraction(this._scrollArea.Position.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Input.InputManager.Instance.MouseDelta.Y * JuiceboxEngine.Graphics.GraphicsManager.Instance.Height));
                 this._scrollArea.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Math.JMath.Clamp$1(this._scrollArea.Position.Y, 0, this.maxScroll));
             },
-            LoadLeaderboard: function (index) {
+            LoadLeaderboard: function (index, local) {
+                if (local === void 0) { local = false; }
                 var pfName = this.LEADERBOARD_NAMES[index];
                 this._title.DisplayText = this.LEADERBOARD_NAMES_HUMAN[index];
 
-                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard(pfName, 0, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
-                JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboardAroundPlayer(pfName, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
+                if (local) {
+                    JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboardAroundPlayer(pfName, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
+                } else {
+                    JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.GetLeaderboard(pfName, 0, 100).addOnTaskCompleted(H5.fn.cacheBind(this, this.GotLeaderboard));
+                }
 
                 this.ClearAndLoad();
             },
@@ -504,6 +508,7 @@ H5.assembly("LD51", function ($asm, globals) {
             },
             ShowLeaderboardData: function (leaderboard) {
                 this._loading.Enabled = false;
+                this._scrollArea.RemoveAllChildren();
 
                 this.maxScroll = 5;
 
@@ -512,32 +517,27 @@ H5.assembly("LD51", function ($asm, globals) {
 
                     var entry = leaderboard.Entries.getItem(i).$clone();
 
-                    var scorePanel = new LD51.LD51Panel(this._scrollArea, 2, new JuiceboxEngine.Math.Vector2.$ctor3(280, 32));
-                    scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
-                    scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                    var scorePanel = new JuiceboxEngine.GUI.EmptyUIElement.ctor(this._scrollArea);
+                    scorePanel.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(280, 32);
                     scorePanel.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
                     scorePanel.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
                     scorePanel.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, ((H5.Int.mul(((-i) | 0), 33) - 5) | 0));
-                    scorePanel.Front.Enabled = entry.position < 4;
-                    scorePanel.Back.Enabled = entry.position < 4;
 
                     var leaderboardText = new JuiceboxEngine.GUI.CanvasText(scorePanel);
                     leaderboardText.DisplayText = System.String.format("{0}. {1}", entry.position, entry.displayName);
-                    leaderboardText.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(scorePanel.Front.Dimensions.$clone(), 2);
+                    leaderboardText.Dimensions = scorePanel.Dimensions.$clone();
                     leaderboardText.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
                     leaderboardText.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
                     leaderboardText.Font = "AldotheApache";
-                    leaderboardText.TextSize = 48;
-                    leaderboardText.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
+                    leaderboardText.TextSize = 24;
 
                     var leaderboardScore = new JuiceboxEngine.GUI.CanvasText(scorePanel);
                     leaderboardScore.DisplayText = System.String.format("{0}", [entry.value]);
-                    leaderboardScore.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(scorePanel.Front.Dimensions.$clone(), 2);
+                    leaderboardScore.Dimensions = scorePanel.Dimensions.$clone();
                     leaderboardScore.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
                     leaderboardScore.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Right;
                     leaderboardScore.Font = "AldotheApache";
-                    leaderboardScore.TextSize = 48;
-                    leaderboardScore.Scale = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.5);
+                    leaderboardScore.TextSize = 24;
 
                     if (System.String.equals(entry.playfabId, JuiceboxEngine.Playfab.PlayfabManager.Identity.PlayfabId)) {
                         leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(153, 229, 80, 255);
@@ -545,14 +545,14 @@ H5.assembly("LD51", function ($asm, globals) {
                     }
 
                     if (entry.position === 1) {
-                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(251, 242, 54, 255);
-                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(223, 113, 38, 255);
+                        leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(251, 242, 54, 255);
+                        leaderboardScore.Color = new JuiceboxEngine.Math.Color.$ctor2(251, 242, 54, 255);
                     } else if (entry.position === 2) {
-                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(203, 219, 252, 255);
-                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(155, 173, 183, 255);
+                        leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(203, 219, 252, 255);
+                        leaderboardScore.Color = new JuiceboxEngine.Math.Color.$ctor2(203, 219, 252, 255);
                     } else if (entry.position === 3) {
-                        scorePanel.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(143, 86, 59, 255);
-                        scorePanel.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(102, 57, 49, 255);
+                        leaderboardText.Color = new JuiceboxEngine.Math.Color.$ctor2(217, 160, 102, 255);
+                        leaderboardScore.Color = new JuiceboxEngine.Math.Color.$ctor2(217, 160, 102, 255);
                     }
                 }
 
@@ -1222,7 +1222,7 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._totalTime = 0;
 
-                this._currentPerson = this.FindPerson(0);
+                this._currentPerson = System.Linq.Enumerable.from(this._people, LD51.PersonComponent).first();
                 this._currentPerson.WantsIceCream();
             },
             /**
