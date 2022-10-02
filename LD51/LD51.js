@@ -153,7 +153,7 @@ H5.assembly("LD51", function ($asm, globals) {
                         pointStrings.add("Delivery");
                         points.add(100);
 
-                        if (this._timer > 6.0) {
+                        if (this._timer > 5.0) {
                             pointStrings.add("Speed bonus!");
                             points.add(20);
                         }
@@ -372,7 +372,9 @@ H5.assembly("LD51", function ($asm, globals) {
             WanderDistance: null,
             WantsIcecream: false,
             _ui: null,
-            _setup: false
+            _setup: false,
+            _animOffset: 0,
+            _sprite: null
         },
         ctors: {
             init: function () {
@@ -390,15 +392,23 @@ H5.assembly("LD51", function ($asm, globals) {
                 image.Dimensions = JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(image.DisplayImage.Width, image.DisplayImage.Height), this.GameObject.Scene.DefaultCamera.Zoom), JuiceboxEngine.Util.Config.ConfigValues.PixelSize);
                 image.Enabled = false;
 
+                this._animOffset = JuiceboxEngine.Math.RandomNumbers.Next() * 100;
+
                 this._ui.UIElement = image;
             },
             Update: function () {
                 JuiceboxEngine.Components.Component.prototype.Update.call(this);
 
                 if (!this._setup) {
-                    var sprite = this.GameObject.GetComponent(JuiceboxEngine.Components.SpriteComponent);
-                    sprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), LD51.PersonComponent.PERSON_DIMENSIONS, LD51.PersonComponent.PERSON_DIMENSIONS);
+                    this._sprite = this.GameObject.GetComponent(JuiceboxEngine.Components.SpriteComponent);
+                    this._sprite.SourceRectangle = new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), H5.Int.mul(JuiceboxEngine.Math.RandomNumbers.NextRange(0, 4), LD51.PersonComponent.PERSON_DIMENSIONS), LD51.PersonComponent.PERSON_DIMENSIONS, LD51.PersonComponent.PERSON_DIMENSIONS);
                     this._setup = true;
+                }
+
+                this._sprite.Offset = new JuiceboxEngine.Math.Vector2.$ctor3(0, JuiceboxEngine.Math.JMath.Abs(JuiceboxEngine.Math.JMath.Sin(this._animOffset + JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.PI * 4 * (this.WantsIcecream ? 2 : 1)) * 2));
+
+                if (this.WantsIcecream) {
+                    this._ui.UIElement.Scale = JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), (1 + JuiceboxEngine.Math.JMath.Abs(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * 4)) * 0.5));
                 }
             },
             WantsIceCream: function () {
@@ -663,7 +673,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         canvasTexts[i].Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                                         canvasTexts[i].Font = "AldotheApache";
 
-                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(this.ShowScoreText(canvasTexts[i], H5.Int.mul((((((text.length - i) | 0) - 1) | 0)), 32)));
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(this.ShowScoreText(canvasTexts[i], H5.Int.mul((((((text.length - i) | 0) - 1) | 0)), 32), text.length));
                                         $s = 3;
                                         return true;
                                 }
@@ -677,7 +687,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                     continue;
                                 }
                                 case 5: {
-                                    $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(1.0);
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(0.5);
                                         $s = 6;
                                         return true;
                                 }
@@ -713,7 +723,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 }));
                 return $en;
             },
-            ShowScoreText: function (text, height) {
+            ShowScoreText: function (text, height, totalItems) {
                 var $s = 0,
                     $jff,
                     $rv,
@@ -724,14 +734,14 @@ H5.assembly("LD51", function ($asm, globals) {
                         for (;;) {
                             switch ($s) {
                                 case 0: {
-                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3, function (x) {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.3 / totalItems, function (x) {
                                             text.Scale = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(0, 0), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
                                         }));
                                         $s = 1;
                                         return true;
                                 }
                                 case 1: {
-                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, function (x) {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2 / totalItems, function (x) {
                                             text.Position = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.Math.Vector2.Zero.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, height), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
                                         }));
                                         $s = 2;
