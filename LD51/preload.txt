@@ -15,6 +15,7 @@ Sounds/FX/GameOver.mp3
 Sounds/Overworld_level_1.mp3
 Sounds/Overworld_level_2.mp3
 Sounds/Overworld_level_3.mp3
+Sounds/MainMenu.mp3
 Textures/People.png
 Textures/Truck.png
 Textures/IceIcon.png
