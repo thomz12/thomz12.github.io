@@ -259,12 +259,16 @@ H5.assembly("LD51", function ($asm, globals) {
     H5.define("LD51.Button", {
         inherits: [JuiceboxEngine.GUI.EmptyUIElement],
         fields: {
-            _background: null,
-            _foreground: null,
+            Back: null,
+            Front: null,
             Text: null,
-            _offset: 0
+            _offset: 0,
+            FrontColor: null
         },
         ctors: {
+            init: function () {
+                this.FrontColor = new JuiceboxEngine.Math.Color();
+            },
             ctor: function (parent, text, offset) {
                 if (offset === void 0) { offset = 5; }
 
@@ -279,40 +283,46 @@ H5.assembly("LD51", function ($asm, globals) {
                 this.addOnMouseDown(H5.fn.cacheBind(this, this.MouseDown));
                 this.addOnMouseUp(H5.fn.cacheBind(this, this.MouseUp));
 
-                this._background = new JuiceboxEngine.GUI.Panel(this);
-                this._background.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this._background.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this._background.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(290, 64);
-                this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
-                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(offset, ((-offset) | 0));
+                this.Back = new JuiceboxEngine.GUI.SlicedImage(this);
+                this.Back.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this.Back.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this.Back.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(290, 64);
+                this.Back.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Button.png");
+                this.Back.Border = 4;
+                this.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                this.Back.Position = new JuiceboxEngine.Math.Vector2.$ctor3(offset, ((-offset) | 0));
 
-                this._foreground = new JuiceboxEngine.GUI.Panel(this);
-                this._foreground.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this._foreground.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this._foreground.Dimensions = this._background.Dimensions.$clone();
-                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
-                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(((-offset) | 0), offset);
+                this.Front = new JuiceboxEngine.GUI.SlicedImage(this);
+                this.Front.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this.Front.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this.Front.Dimensions = this.Back.Dimensions.$clone();
+                this.Front.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/Button.png");
+                this.Front.Border = 4;
+                this.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+                this.Front.Position = new JuiceboxEngine.Math.Vector2.$ctor3(((-offset) | 0), offset);
 
-                this.Text = new JuiceboxEngine.GUI.CanvasText(this._foreground);
-                this.Text.Dimensions = this._foreground.Dimensions.$clone();
+                this.Text = new JuiceboxEngine.GUI.CanvasText(this.Front);
+                this.Text.Dimensions = this.Front.Dimensions.$clone();
                 this.Text.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
                 this.Text.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
                 this.Text.DisplayText = text;
                 this.Text.Font = "AldotheApache";
                 this.Text.TextSize = 32;
+
+                this.FrontColor = this.Front.Color.$clone();
             }
         },
         methods: {
             UpdateElement: function () {
                 JuiceboxEngine.GUI.EmptyUIElement.prototype.UpdateElement.call(this);
 
-                this._background.Dimensions = JuiceboxEngine.Math.Vector2.op_Subtraction(this.Dimensions.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(10, 10));
-                this._foreground.Dimensions = this._background.Dimensions.$clone();
-                this.Text.Dimensions = this._foreground.Dimensions.$clone();
+                this.Back.Dimensions = JuiceboxEngine.Math.Vector2.op_Subtraction(this.Dimensions.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(10, 10));
+                this.Front.Dimensions = this.Back.Dimensions.$clone();
+                this.Text.Dimensions = this.Front.Dimensions.$clone();
             },
             MouseUp: function (ev) {
-                this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
-                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+                this.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                this.Front.Color = this.FrontColor.$clone();
 
                 var audioComponent = new JuiceboxEngine.Audio.AudioComponent();
                 audioComponent.Initialize();
@@ -320,29 +330,29 @@ H5.assembly("LD51", function ($asm, globals) {
                 audioComponent.Play();
             },
             MouseDown: function (ev) {
-                this._background.Color = JuiceboxEngine.Math.Color.White.$clone();
-                this._foreground.Color = JuiceboxEngine.Math.Color.White.$clone();
+                this.Back.Color = JuiceboxEngine.Math.Color.White.$clone();
+                this.Front.Color = JuiceboxEngine.Math.Color.White.$clone();
             },
             MouseExit: function (ev) {
-                var startBack = this._background.Position.$clone();
-                var startFront = this._foreground.Position.$clone();
+                var startBack = this.Back.Position.$clone();
+                var startFront = this.Front.Position.$clone();
 
                 JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, H5.fn.bind(this, function (x) {
-                    this._background.Position = JuiceboxEngine.Math.Vector2.Interpolate(startBack.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(this._offset, -this._offset), x);
-                    this._foreground.Position = JuiceboxEngine.Math.Vector2.Interpolate(startFront.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-this._offset, this._offset), x);
+                    this.Back.Position = JuiceboxEngine.Math.Vector2.Interpolate(startBack.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(this._offset, -this._offset), x);
+                    this.Front.Position = JuiceboxEngine.Math.Vector2.Interpolate(startFront.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(-this._offset, this._offset), x);
 
                 })));
 
-                this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
-                this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+                this.Back.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
+                this.Front.Color = this.FrontColor.$clone();
             },
             MouseStay: function (ev) {
                 var mouseEvent = ev;
 
                 var pos = JuiceboxEngine.Math.Vector2.op_Division(mouseEvent.position.$clone(), this.Dimensions.$clone());
 
-                this._background.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.Y));
-                this._foreground.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.Y));
+                this.Back.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(this._offset, -this._offset, pos.Y));
+                this.Front.Position = new JuiceboxEngine.Math.Vector2.$ctor3(JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.X), JuiceboxEngine.Math.JMath.Interpolate(-this._offset, this._offset, pos.Y));
             }
         }
     });
@@ -607,12 +617,12 @@ H5.assembly("LD51", function ($asm, globals) {
                     this._loading.Rotation = -x * JuiceboxEngine.Math.JMath.PI * 2;
                 })));
 
-                var close = new LD51.Button(this._bodyPanel, "close", 2);
-                close.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(150, 32);
-                close.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
-                close.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                var close = new LD51.Button(this._bodyPanel, "Close", 2);
+                close.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(200, 32);
+                close.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                close.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
                 close.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -3);
-                close.Text.TextSize = 16;
+                close.Text.TextSize = 24;
 
                 close.addOnMouseUp(H5.fn.bind(this, function (ev) {
                     !H5.staticEquals(this.OnClose, null) ? this.OnClose() : null;
@@ -1816,7 +1826,7 @@ H5.assembly("LD51", function ($asm, globals) {
                     this._driftTime = 0;
                 }
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp") || JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp")) {
                     this.speed += 500 * JuiceboxEngine.Util.Time.DeltaTime;
 
                     if (this.speed > 0) {
