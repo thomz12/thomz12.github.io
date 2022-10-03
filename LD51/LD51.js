@@ -823,7 +823,10 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._nameChange = false;
                     }
                 } else {
-                    var defaultName = System.String.format("Ice Driver #{0}", [JuiceboxEngine.Math.RandomNumbers.NextRange(1000, 10000)]);
+                    var defaultName = JuiceboxEngine.Playfab.PlayfabManager.Identity.Username;
+                    if (defaultName == null) {
+                        defaultName = System.String.format("Ice Driver #{0}", [JuiceboxEngine.Math.RandomNumbers.NextRange(1000, 10000)]);
+                    }
 
                     var inputName = null;
                     var msg = task == null ? "Username for leaderboards" : "Error, please try a different name. (Name already taken?)";
