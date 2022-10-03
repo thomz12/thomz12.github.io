@@ -1200,6 +1200,11 @@ H5.assembly("LD51", function ($asm, globals) {
                     particle.color = new JuiceboxEngine.Math.Color.$ctor3(1.0, 1.0, 1.0, JuiceboxEngine.Math.JMath.Interpolate(1.0, 0.0, particle.lifeProgress));
                 });
 
+                var vroomObj = this.AddGameObject$1("Vrooooom");
+                this._vroomAudio = vroomObj.AddComponent(JuiceboxEngine.Audio.AudioComponent);
+                this._vroomAudio.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/FX/CarGoesVroom.mp3");
+                this._vroomAudio.Play();
+                this._vroomAudio.Loop = true;
 
                 this._bonkAudio = this.AddGameObject$1("Bonk").AddComponent(JuiceboxEngine.Audio.AudioComponent);
 
@@ -1618,6 +1623,8 @@ H5.assembly("LD51", function ($asm, globals) {
                     JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.GameOver());
                 }
 
+                this._vroomAudio.PlaybackRate = 1.0 + (this._controller.speed / this._controller.maxSpeed);
+
                 if (this._hasControl) {
                     this._controller.Update();
                 }
@@ -1936,7 +1943,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 var forwardTouch = 0;
                 var turnTouch = 0;
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse) && JuiceboxEngine.Util.Browser.IsMobile()) {
                     var forward = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(0, 1), this._playerPhysics.Rotation);
                     var right = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(1, 0), this._playerPhysics.Rotation);
                     var mousePos = JuiceboxEngine.Math.Vector2.op_Subtraction(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone(), 2), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1));
@@ -1948,9 +1955,6 @@ H5.assembly("LD51", function ($asm, globals) {
                     forwardTouch = JuiceboxEngine.Math.Vector2.Dot(forward.$clone(), mousePos.$clone());
                     turnTouch = JuiceboxEngine.Math.Vector2.Dot(right.$clone(), mousePos.$clone());
                     touchInput = true;
-
-                    JuiceboxEngine.Util.Log.LogInfo("forward: " + (System.Single.format(forwardTouch) || ""));
-                    JuiceboxEngine.Util.Log.LogInfo("turn: " + (System.Single.format(turnTouch) || ""));
                 }
 
                 if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp") || (touchInput && forwardTouch > -0.5)) {

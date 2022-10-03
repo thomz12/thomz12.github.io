@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.5.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.6.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -14554,7 +14554,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 },
                 set: function (value) {
                     this._loop = value;
-                    this.SetClipSettings();
+                    if (this.AudioClip == null || !this._hasID) {
+                        return;
+                    }
+
+                    this.AudioClip.Loop(this._id, this._loop);
                 }
             },
             /**
@@ -14572,7 +14576,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 },
                 set: function (value) {
                     this._playbackRate = value;
-                    this.SetClipSettings();
+                    if (this.AudioClip == null || !this._hasID) {
+                        return;
+                    }
+
+                    this.AudioClip.SetPlaybackSpeed(this._id, this._playbackRate);
                 }
             },
             /**
@@ -14590,7 +14598,11 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 },
                 set: function (value) {
                     this._volume = value;
-                    this.SetClipSettings();
+                    if (this.AudioClip == null || !this._hasID) {
+                        return;
+                    }
+
+                    this.AudioClip.Volume(this._id, this.Volume);
                 }
             }
         },
@@ -14746,7 +14758,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 props.src = path;
                 props.autoplay = false;
                 props.loop = false;
-                props.html5 = true;
+                props.html5 = false;
 
                 var howl = new (Howl)(props);
 
