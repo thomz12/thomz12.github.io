@@ -342,6 +342,150 @@ H5.assembly("LD51", function ($asm, globals) {
         }
     });
 
+    H5.define("LD51.CreditsUI", {
+        inherits: [JuiceboxEngine.GUI.EmptyUIElement],
+        fields: {
+            back: null
+        },
+        ctors: {
+            ctor: function (parent) {
+                this.$initialize();
+                JuiceboxEngine.GUI.EmptyUIElement.ctor.call(this, parent);
+                this.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 200);
+
+                var panelMathijs = new LD51.Button(this, "", 2);
+                panelMathijs.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 84);
+                panelMathijs.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, 90);
+                panelMathijs.addOnMouseUp(function (ev) {
+                    JuiceboxEngine.Util.Browser.OpenWindow("https://twitter.com/dootdootmathijs");
+                });
+
+                var panelThom = new LD51.Button(this, "", 2);
+                panelThom.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 84);
+                panelThom.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, 5);
+                panelThom.addOnMouseUp(function (ev) {
+                    JuiceboxEngine.Util.Browser.OpenWindow("https://twitter.com/thomz0172");
+                });
+
+
+                var mathijs = new JuiceboxEngine.GUI.Image(panelMathijs.Text.Parent);
+                mathijs.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/mathijs.png");
+                mathijs.DisplayImage.Sample = JuiceboxEngine.Graphics.Texture2D.SampleMode.Linear;
+                mathijs.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(64, 64);
+                mathijs.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                mathijs.Anchor = JuiceboxEngine.GUI.UIDefaults.CenterLeft.$clone();
+                mathijs.Position = new JuiceboxEngine.Math.Vector2.$ctor3(mathijs.Dimensions.X / 2 + 4, 0);
+
+                var mathijsName = new JuiceboxEngine.GUI.CanvasText(mathijs);
+                mathijsName.DisplayText = "Mathijs Koning";
+                mathijsName.Font = "AldotheApache";
+                mathijsName.TextSize = 24;
+                mathijsName.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 24);
+                mathijsName.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                mathijsName.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                mathijsName.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                mathijsName.Anchor = JuiceboxEngine.GUI.UIDefaults.TopRight.$clone();
+                mathijsName.Position = new JuiceboxEngine.Math.Vector2.$ctor3(3, 4);
+
+                var mathijsRole = new JuiceboxEngine.GUI.CanvasText(mathijsName);
+                mathijsRole.DisplayText = "Audio, Art";
+                mathijsRole.Font = "AldotheApache";
+                mathijsRole.TextSize = 16;
+                mathijsRole.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                mathijsRole.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                mathijsRole.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                mathijsRole.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                mathijsRole.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var mathijsIce = new JuiceboxEngine.GUI.CanvasText(mathijsRole);
+                mathijsIce.DisplayText = "Favorite ice cream: Chocolate";
+                mathijsIce.Font = "AldotheApache";
+                mathijsIce.TextSize = 16;
+                mathijsIce.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                mathijsIce.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                mathijsIce.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                mathijsIce.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                mathijsIce.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var mathijsTwitter = new JuiceboxEngine.GUI.CanvasText(mathijsIce);
+                mathijsTwitter.DisplayText = "Twitter: dootdootmathijs";
+                mathijsTwitter.Font = "AldotheApache";
+                mathijsTwitter.TextSize = 16;
+                mathijsTwitter.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                mathijsTwitter.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                mathijsTwitter.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                mathijsTwitter.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                mathijsTwitter.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var thom = new JuiceboxEngine.GUI.Image(panelThom.Text.Parent);
+                thom.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/thom.png");
+                thom.DisplayImage.Sample = JuiceboxEngine.Graphics.Texture2D.SampleMode.Linear;
+                thom.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(64, 64);
+                thom.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                thom.Anchor = JuiceboxEngine.GUI.UIDefaults.CenterLeft.$clone();
+                thom.Position = new JuiceboxEngine.Math.Vector2.$ctor3(thom.Dimensions.X / 2 + 4, 0);
+
+                var thomName = new JuiceboxEngine.GUI.CanvasText(thom);
+                thomName.DisplayText = "Thom Zeilstra";
+                thomName.Font = "AldotheApache";
+                thomName.TextSize = 24;
+                thomName.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 24);
+                thomName.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                thomName.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                thomName.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                thomName.Anchor = JuiceboxEngine.GUI.UIDefaults.TopRight.$clone();
+                thomName.Position = new JuiceboxEngine.Math.Vector2.$ctor3(3, 4);
+
+                var thomRole = new JuiceboxEngine.GUI.CanvasText(thomName);
+                thomRole.DisplayText = "Programming, Art";
+                thomRole.Font = "AldotheApache";
+                thomRole.TextSize = 16;
+                thomRole.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                thomRole.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                thomRole.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                thomRole.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                thomRole.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var thomIce = new JuiceboxEngine.GUI.CanvasText(thomRole);
+                thomIce.DisplayText = "Favorite ice cream: Matcha";
+                thomIce.Font = "AldotheApache";
+                thomIce.TextSize = 16;
+                thomIce.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                thomIce.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                thomIce.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                thomIce.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                thomIce.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var thomTwitter = new JuiceboxEngine.GUI.CanvasText(thomIce);
+                thomTwitter.DisplayText = "Twitter: thomz0172";
+                thomTwitter.Font = "AldotheApache";
+                thomTwitter.TextSize = 16;
+                thomTwitter.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 16);
+                thomTwitter.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Left;
+                thomTwitter.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                thomTwitter.Pivot = JuiceboxEngine.GUI.UIDefaults.TopLeft.$clone();
+                thomTwitter.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomLeft.$clone();
+
+                var panelInfo = new LD51.Button(this, "Gelato Drift, created in 72 hours for Ludum Dare 51! Thank you for playing! \ud83c\udf67", 2);
+                panelInfo.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 96);
+                panelInfo.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, 5);
+                panelInfo.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                panelInfo.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                panelInfo.Text.TextSize = 24;
+                panelInfo.addOnMouseUp(function (ev) {
+                    JuiceboxEngine.Util.Browser.OpenWindow("https://ldjam.com/events/ludum-dare/51/$296832");
+                });
+
+                this.back = new LD51.Button(this, "Back to menu", 2);
+                this.back.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 32);
+                this.back.Position = new JuiceboxEngine.Math.Vector2.$ctor3(5, -91);
+                this.back.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                this.back.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                this.back.Text.TextSize = 24;
+            }
+        }
+    });
+
     H5.define("LD51.LD51Panel", {
         inherits: [JuiceboxEngine.GUI.EmptyUIElement],
         fields: {
@@ -681,7 +825,26 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._creditsBtn.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.4);
                 this._creditsBtn.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, -139);
                 this._creditsBtn.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
-                this._creditsBtn.addOnMouseUp(function (ev) { });
+                this._creditsBtn.addOnMouseUp(H5.fn.bind(this, function (ev) {
+                    this._play.Enabled = false;
+                    this._leaderboards.Enabled = false;
+                    this._creditsBtn.Enabled = false;
+                    this._playfabText.Enabled = false;
+                    this._title.Enabled = false;
+
+                    var creditsui = new LD51.CreditsUI(this.GUI.Root);
+                    creditsui.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                    creditsui.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                    creditsui.back.addOnMouseUp(H5.fn.bind(this, function (mev) {
+                        this._play.Enabled = true;
+                        this._leaderboards.Enabled = true;
+                        this._creditsBtn.Enabled = true;
+                        this._playfabText.Enabled = true;
+                        this._title.Enabled = true;
+                        creditsui.Remove();
+                    }));
+                }));
 
                 var signin = new LD50.PlayfabSignin();
                 signin.AutoLogin();
@@ -1682,7 +1845,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playerPhysics.Velocity = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(0, this.speed), this._playerPhysics.Rotation);
 
                 if (!this.reversing) {
-                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity / 2, 0.1 * (this._playerPhysics.Velocity.Length() / this.maxSpeed));
+                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity / 3, 0.1 * (this._playerPhysics.Velocity.Length() / this.maxSpeed));
                 } else {
                     this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, 0, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8;
                 }

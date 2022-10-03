@@ -23,6 +23,8 @@ Textures/IceIcon.png
 Textures/IceCreamRequest.png
 Textures/Arrow.png
 Textures/title.png
+Textures/thom.png
+Textures/mathijs.png
 Levels/CityMap.json
 Levels/CityMap-1.png
 Levels/CityMap-5.png
