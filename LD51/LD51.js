@@ -1623,7 +1623,7 @@ H5.assembly("LD51", function ($asm, globals) {
                     JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.GameOver());
                 }
 
-                this._vroomAudio.PlaybackRate = 1.0 + (this._controller.speed / this._controller.maxSpeed);
+                this._vroomAudio.PlaybackRate = 1.0 + JuiceboxEngine.Math.JMath.Abs(this._controller.speed / this._controller.maxSpeed);
 
                 if (this._hasControl) {
                     this._controller.Update();
