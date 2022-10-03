@@ -1,7 +1,7 @@
 /**
  * @compiler H5 0.0.25007
  */
-H5.assemblyVersion("JuiceboxEngine","0.3.4.0");
+H5.assemblyVersion("JuiceboxEngine","0.3.5.0");
 H5.assembly("JuiceboxEngine", function ($asm, globals) {
     "use strict";
 
@@ -5135,7 +5135,7 @@ H5.assembly("JuiceboxEngine", function ($asm, globals) {
                 }
 
                 if (this.UseScissor) {
-                    JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.ScissorTest(new JuiceboxEngine.Math.Rectangle.$ctor2(((H5.Int.clip32(this.Bounds.X) + ((H5.Int.div(JuiceboxEngine.Graphics.GraphicsManager.Instance.Width, 2)) | 0)) | 0), ((H5.Int.clip32(this.Bounds.Y) + ((H5.Int.div(JuiceboxEngine.Graphics.GraphicsManager.Instance.Height, 2)) | 0)) | 0), H5.Int.clip32(this.Bounds.Width), H5.Int.clip32(this.Bounds.Height)), true);
+                    JuiceboxEngine.Graphics.GraphicsManager.Instance.Context.ScissorTest(new JuiceboxEngine.Math.Rectangle.$ctor2(H5.Int.mul(H5.Int.clip32((this.Bounds.X + ((H5.Int.div(JuiceboxEngine.Graphics.GraphicsManager.Instance.Width, 2)) | 0))), JuiceboxEngine.Graphics.GraphicsManager.Instance.DevicePixelRatio), H5.Int.mul(H5.Int.clip32((this.Bounds.Y + ((H5.Int.div(JuiceboxEngine.Graphics.GraphicsManager.Instance.Height, 2)) | 0))), JuiceboxEngine.Graphics.GraphicsManager.Instance.DevicePixelRatio), H5.Int.mul(H5.Int.clip32(this.Bounds.Width), JuiceboxEngine.Graphics.GraphicsManager.Instance.DevicePixelRatio), H5.Int.mul(H5.Int.clip32(this.Bounds.Height), JuiceboxEngine.Graphics.GraphicsManager.Instance.DevicePixelRatio)), true);
                 }
 
                 if (frustum.v.Intersects(this._bounds.$clone())) {
