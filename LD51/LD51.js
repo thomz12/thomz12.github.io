@@ -806,6 +806,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 var bgm = this._background.AddComponent(JuiceboxEngine.Audio.AudioComponent);
                 bgm.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/MainMenu.mp3");
                 bgm.Loop = true;
+                bgm.Volume = 0.5;
                 bgm.Play();
 
                 this._play = new LD51.Button(this.GUI.Root, "Play!");
@@ -1118,7 +1119,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _backgroundAudio: null,
             _currentLevel: 0,
             _isFirst: false,
-            _driftSmoke: null
+            _driftSmoke: null,
+            _showHelp: false
         },
         ctors: {
             /**
@@ -1219,7 +1221,101 @@ H5.assembly("LD51", function ($asm, globals) {
 
                 this._bigTextUI = new LD51.BigTextUI(this.GUI.Root);
 
+                this._showHelp = false;
+                if (this._showHelp) {
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(this.ShowHelp("How to drive", "Drive using the WASD or arrow keys on the keyboard. Get used to driving a bit!", "Textures/howtodrive.png"));
+                }
+
                 this.StartGame();
+            },
+            ShowHelp: function (title, desc, image) {
+                var $s = 0,
+                    $jff,
+                    $rv,
+                    bigPanel,
+                    panel,
+                    helpTitle,
+                    helpImage,
+                    helpDesc,
+                    closeHelp,
+                    $ae;
+
+                var $en = new H5.GeneratorEnumerator(H5.fn.bind(this, function () {
+                    try {
+                        for (;;) {
+                            switch ($s) {
+                                case 0: {
+                                    $en.current = new JuiceboxEngine.Coroutines.WaitForSeconds(1.5);
+                                        $s = 1;
+                                        return true;
+                                }
+                                case 1: {
+                                    bigPanel = new JuiceboxEngine.GUI.Panel(this.GUI.Root);
+                                        bigPanel.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        bigPanel.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        bigPanel.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(10000, 10000);
+                                        bigPanel.Color = new JuiceboxEngine.Math.Color.$ctor3(0.1, 0.1, 0.1, 0.5);
+
+                                        panel = new LD51.LD51Panel(bigPanel, 3, new JuiceboxEngine.Math.Vector2.$ctor3(354, 450));
+                                        panel.Anchor = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                                        panel.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+
+                                        helpTitle = new JuiceboxEngine.GUI.CanvasText(panel.Front);
+                                        helpTitle.DisplayText = title;
+                                        helpTitle.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(350, 48);
+                                        helpTitle.TextSize = 48;
+                                        helpTitle.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        helpTitle.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        helpTitle.Font = "AldotheApache";
+
+                                        helpImage = new JuiceboxEngine.GUI.Image(helpTitle);
+                                        helpImage.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(350, 250);
+                                        helpImage.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, image);
+                                        helpImage.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        helpImage.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+
+                                        helpDesc = new JuiceboxEngine.GUI.CanvasText(helpImage);
+                                        helpDesc.DisplayText = desc;
+                                        helpDesc.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(340, 64);
+                                        helpDesc.TextSize = 24;
+                                        helpDesc.Pivot = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                                        helpDesc.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                                        helpDesc.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Top;
+                                        helpDesc.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                                        helpDesc.Font = "AldotheApache";
+
+                                        closeHelp = new LD51.Button(panel.Front, "Got it!", 2);
+                                        closeHelp.Front.Color = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
+                                        closeHelp.FrontColor = new JuiceboxEngine.Math.Color.$ctor2(99, 155, 255, 255);
+                                        closeHelp.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 32);
+                                        closeHelp.Text.TextSize = 24;
+                                        closeHelp.Anchor = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                                        closeHelp.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+
+                                        closeHelp.addOnMouseUp(function (ev) {
+                                            bigPanel.Remove();
+                                        });
+
+                                        $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.4, function (x) {
+                                            panel.Scale = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.Math.Vector2.Zero.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
+                                        }));
+                                        $s = 2;
+                                        return true;
+                                }
+                                case 2: {
+
+                                }
+                                default: {
+                                    return false;
+                                }
+                            }
+                        }
+                    } catch($ae1) {
+                        $ae = System.Exception.create($ae1);
+                        throw $ae;
+                    }
+                }));
+                return $en;
             },
             PersonCreate: function (personComponent) {
                 this._people.add(personComponent);
@@ -1826,13 +1922,34 @@ H5.assembly("LD51", function ($asm, globals) {
                     this._driftTime = 0;
                 }
 
-                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp")) {
+                var touchInput = false;
+                var forwardTouch = 0;
+                var turnTouch = 0;
+
+                if (JuiceboxEngine.Input.InputManager.Instance.IsMouseKeyHeld(JuiceboxEngine.Input.MouseKey.LeftMouse)) {
+                    var forward = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(0, 1), this._playerPhysics.Rotation);
+                    var right = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(1, 0), this._playerPhysics.Rotation);
+                    var mousePos = JuiceboxEngine.Math.Vector2.op_Subtraction(JuiceboxEngine.Math.Vector2.op_Multiply$1(JuiceboxEngine.Input.InputManager.Instance.MousePosition.$clone(), 2), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1));
+
+                    forward.Normalize();
+                    right.Normalize();
+                    mousePos.Normalize();
+
+                    forwardTouch = JuiceboxEngine.Math.Vector2.Dot(forward.$clone(), mousePos.$clone());
+                    turnTouch = JuiceboxEngine.Math.Vector2.Dot(right.$clone(), mousePos.$clone());
+                    touchInput = true;
+
+                    JuiceboxEngine.Util.Log.LogInfo("forward: " + (System.Single.format(forwardTouch) || ""));
+                    JuiceboxEngine.Util.Log.LogInfo("turn: " + (System.Single.format(turnTouch) || ""));
+                }
+
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("W") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowUp") || (touchInput && forwardTouch > -0.5)) {
                     this.speed += 500 * JuiceboxEngine.Util.Time.DeltaTime;
 
                     if (this.speed > 0) {
                         this.reversing = false;
                     }
-                } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("S") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowDown")) {
+                } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("S") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowDown") || (touchInput && forwardTouch < -0.5)) {
                     if (this.speed <= 0) {
                         this.speed -= 300 * JuiceboxEngine.Util.Time.DeltaTime;
                         this.reversing = true;
@@ -1856,9 +1973,9 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playerPhysics.AngularVelocity = 0;
 
                 if (JuiceboxEngine.Math.JMath.Abs(this.speed) > 0.1) {
-                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("D") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowRight")) {
+                    if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("D") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowRight") || (touchInput && turnTouch > 0.25)) {
                         this._playerPhysics.AngularVelocity = -JuiceboxEngine.Math.JMath.Interpolate(3, 2, (this.speed / this.maxSpeed));
-                    } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("A") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowLeft")) {
+                    } else if (JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("A") || JuiceboxEngine.Input.InputManager.Instance.IsKeyHeld("ArrowLeft") || (touchInput && turnTouch < -0.25)) {
                         this._playerPhysics.AngularVelocity = JuiceboxEngine.Math.JMath.Interpolate(3, 2, (this.speed / this.maxSpeed));
                     }
 
