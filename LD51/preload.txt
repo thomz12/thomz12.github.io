@@ -22,6 +22,7 @@ Textures/Truck.png
 Textures/IceIcon.png
 Textures/IceCreamRequest.png
 Textures/Arrow.png
+Textures/Title.png
 Levels/CityMap.json
 Levels/CityMap-1.png
 Levels/CityMap-5.png

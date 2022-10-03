@@ -589,7 +589,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _nameChange: false,
             _play: null,
             _leaderboards: null,
-            _creditsBtn: null
+            _creditsBtn: null,
+            _title: null
         },
         ctors: {
             ctor: function (manager) {
@@ -658,14 +659,22 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._leaderboards.Enabled = true;
                         this._creditsBtn.Enabled = true;
                         this._playfabText.Enabled = true;
+                        this._title.Enabled = true;
                     }));
 
                     this._play.Enabled = false;
                     this._leaderboards.Enabled = false;
                     this._creditsBtn.Enabled = false;
                     this._playfabText.Enabled = false;
+                    this._title.Enabled = false;
                 }));
                 this._leaderboards.Enabled = false;
+
+                this._title = new JuiceboxEngine.GUI.Image(this.GUI.Root);
+                this._title.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/title.png");
+                this._title.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(424, 151);
+                this._title.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
+                this._title.Anchor = new JuiceboxEngine.Math.Vector2.$ctor3(0.5, 0.8);
 
                 this._creditsBtn = new LD51.Button(this.GUI.Root, "Credits");
                 this._creditsBtn.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(250, 55);
@@ -908,6 +917,8 @@ H5.assembly("LD51", function ($asm, globals) {
             _deliveries: 0,
             _score: 0,
             _bonks: 0,
+            _cleanDeliveries: 0,
+            _driftDeliveries: 0,
             _collided: false,
             _invincible: false,
             _topPanel: null,
@@ -1103,6 +1114,7 @@ H5.assembly("LD51", function ($asm, globals) {
                             switch ($s) {
                                 case 0: {
                                     this._bonks = (this._bonks + 1) | 0;
+                                        this._cleanDeliveries = 0;
 
                                         JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
                                             this._playerSprite.Size = JuiceboxEngine.Math.Vector2.Interpolate(new JuiceboxEngine.Math.Vector2.$ctor3(1.5, 1.5), new JuiceboxEngine.Math.Vector2.$ctor3(1.0, 1.0), x);
@@ -1160,26 +1172,32 @@ H5.assembly("LD51", function ($asm, globals) {
                         pointStrings.add("Delivery");
                         points.add(100);
 
-                        if (this._timer > 5.0) {
+                        if (this._timer > 7.0) {
+                            pointStrings.add("Quick delivery!");
+                            points.add(25);
+                        } else if (this._timer > 5.0) {
                             pointStrings.add("Speed bonus!");
                             points.add(20);
+                        } else if (this._timer > 3.0) {
+                            pointStrings.add("Time to spare!");
+                            points.add(15);
                         }
 
-                        if (this._timer < 0.1) {
-                            pointStrings.add("Last moment!");
-                            points.add(20);
-                        } else if (this._timer < 1.0) {
-                            pointStrings.add("Just on time!");
-                            points.add(10);
-                        } else if (this._timer < 2.0) {
-                            pointStrings.add("Cutting it close!");
-                            points.add(5);
-                        }
 
                         if (this._controller.Drifted) {
-                            pointStrings.add("Nice drift!");
-                            points.add(10);
+                            if (this._driftDeliveries === 0) {
+                                pointStrings.add("Epic drift!");
+                                points.add(10);
+                            } else {
+                                pointStrings.add(System.String.format("Epic drift! (x{0})", [((this._driftDeliveries + 1) | 0)]));
+                                points.add(((10 + H5.Int.mul(this._driftDeliveries, 5)) | 0));
+                            }
+
+                            this._driftDeliveries = (this._driftDeliveries + 1) | 0;
+                        } else {
+                            this._driftDeliveries = 0;
                         }
+
                         this._controller.ResetDrift();
 
                         if (this._deliveries === 10) {
@@ -1195,8 +1213,15 @@ H5.assembly("LD51", function ($asm, globals) {
                         }
 
                         if (!this._collided) {
-                            pointStrings.add("Clean drive!");
-                            points.add(25);
+                            if (this._cleanDeliveries === 0) {
+                                pointStrings.add("Clean drive!");
+                                points.add(25);
+                            } else {
+                                pointStrings.add(System.String.format("Clean drive! (x{0})", [((this._cleanDeliveries + 1) | 0)]));
+                                points.add(((25 + H5.Int.mul(this._cleanDeliveries, 5)) | 0));
+                            }
+
+                            this._cleanDeliveries = (this._cleanDeliveries + 1) | 0;
                         }
                         this._collided = false;
 
