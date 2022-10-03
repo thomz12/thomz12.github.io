@@ -313,6 +313,11 @@ H5.assembly("LD51", function ($asm, globals) {
             MouseUp: function (ev) {
                 this._background.Color = new JuiceboxEngine.Math.Color.$ctor2(215, 123, 186, 255);
                 this._foreground.Color = new JuiceboxEngine.Math.Color.$ctor2(95, 205, 228, 255);
+
+                var audioComponent = new JuiceboxEngine.Audio.AudioComponent();
+                audioComponent.Initialize();
+                audioComponent.AudioClip = this.ResourceManager.Load(JuiceboxEngine.Audio.AudioClip, "Sounds/FX/Hit1.mp3");
+                audioComponent.Play();
             },
             MouseDown: function (ev) {
                 this._background.Color = JuiceboxEngine.Math.Color.White.$clone();
@@ -367,6 +372,16 @@ H5.assembly("LD51", function ($asm, globals) {
                     JuiceboxEngine.Util.Browser.OpenWindow("https://twitter.com/thomz0172");
                 });
 
+                var creditsTitle = new JuiceboxEngine.GUI.CanvasText(panelMathijs);
+                creditsTitle.DisplayText = "Credits";
+                creditsTitle.Font = "AldotheApache";
+                creditsTitle.TextSize = 70;
+                creditsTitle.Dimensions = new JuiceboxEngine.Math.Vector2.$ctor3(300, 70);
+                creditsTitle.HorizontalAlignment = JuiceboxEngine.GUI.TextHorizontalAlignment.Center;
+                creditsTitle.VerticalAlignment = JuiceboxEngine.GUI.TextVerticalAlignment.Center;
+                creditsTitle.Pivot = JuiceboxEngine.GUI.UIDefaults.BottomCenter.$clone();
+                creditsTitle.Anchor = JuiceboxEngine.GUI.UIDefaults.TopCenter.$clone();
+                creditsTitle.Position = new JuiceboxEngine.Math.Vector2.$ctor3(0, 16);
 
                 var mathijs = new JuiceboxEngine.GUI.Image(panelMathijs.Text.Parent);
                 mathijs.DisplayImage = this.ResourceManager.Load(JuiceboxEngine.Graphics.Texture2D, "Textures/mathijs.png");
