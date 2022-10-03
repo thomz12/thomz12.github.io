@@ -824,6 +824,11 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._leaderboards.Pivot = JuiceboxEngine.GUI.UIDefaults.Centered.$clone();
                 this._leaderboards.addOnMouseUp(H5.fn.bind(this, function (ev) {
                     this._leaderboardUI = new LD51.LeaderboardUI(this.GUI.Root);
+
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, H5.fn.bind(this, function (x) {
+                        this._leaderboardUI.Scale = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.Math.Vector2.Zero.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
+                    })));
+
                     this._leaderboardUI.addOnClose(H5.fn.bind(this, function () {
                         this._play.Enabled = true;
                         this._leaderboards.Enabled = true;
@@ -869,6 +874,10 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._playfabText.Enabled = true;
                         this._title.Enabled = true;
                         creditsui.Remove();
+                    }));
+
+                    JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.2, function (x) {
+                        creditsui.Scale = JuiceboxEngine.Math.Vector2.Interpolate(JuiceboxEngine.Math.Vector2.Zero.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(1, 1), JuiceboxEngine.Math.Easings.QuadraticEaseOut(x));
                     }));
                 }));
 
@@ -1061,6 +1070,7 @@ H5.assembly("LD51", function ($asm, globals) {
                     $t.Rotation2D += 0.7853982 * JuiceboxEngine.Util.Time.DeltaTime;
                 }
                 this._background.Transform.Translate2D(JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(16, 16), JuiceboxEngine.Util.Time.DeltaTime));
+                this._title.Rotation = JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds) * 0.2;
             },
             PostUpdate: function () {
 
