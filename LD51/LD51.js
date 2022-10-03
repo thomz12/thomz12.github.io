@@ -1682,7 +1682,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 this._playerPhysics.Velocity = JuiceboxEngine.Math.Vector2.Rotate(new JuiceboxEngine.Math.Vector2.$ctor3(0, this.speed), this._playerPhysics.Rotation);
 
                 if (!this.reversing) {
-                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8 * (this._playerPhysics.Velocity.Length() / this.maxSpeed);
+                    this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, this._playerPhysics.AngularVelocity / 2, 0.1 * (this._playerPhysics.Velocity.Length() / this.maxSpeed));
                 } else {
                     this._playerSprite.Rotation = JuiceboxEngine.Math.JMath.Interpolate(this._playerSprite.Rotation, 0, 5.0 * JuiceboxEngine.Util.Time.DeltaTime) * 0.8;
                 }
