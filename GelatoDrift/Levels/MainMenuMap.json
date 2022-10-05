@@ -1,0 +1,1 @@
+{"Gameobjects":[{"Name":"Tile Layer 1","Components":[{"Type":"JuiceboxEngine.Components.TransformComponent","Position2D":{"X":0,"Y":0},"Rotation2D":-0},{"Type":"JuiceboxEngine.Components.TileMapComponent","Sprites":"Textures\\MainMenuSprites.png","MapData":"Levels\\MainMenuMap-1.png","TileSize":16,"Parallax":{"X":1,"Y":1}}]}]}
