@@ -1,4 +1,4 @@
-﻿precision mediump float;
+﻿precision highp float;
 
 // Varyings.
 varying vec2 v_pixelCoord;
