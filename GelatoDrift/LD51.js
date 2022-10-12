@@ -1123,6 +1123,7 @@ H5.assembly("LD51", function ($asm, globals) {
             _topPanel: null,
             _bottomPanel: null,
             _people: null,
+            _visited: null,
             _currentPerson: null,
             _vroomAudio: null,
             _bonkAudio: null,
@@ -1148,6 +1149,7 @@ H5.assembly("LD51", function ($asm, globals) {
                 this.$initialize();
                 JuiceboxEngine.Scene.ctor.call(this, manager);
                 this._people = new (System.Collections.Generic.List$1(LD51.PersonComponent)).ctor();
+                this._visited = new (System.Collections.Generic.Queue$1(LD51.PersonComponent)).ctor();
             }
         },
         methods: {
@@ -1528,6 +1530,13 @@ H5.assembly("LD51", function ($asm, globals) {
                         this._scoreUI.AddScore(pointStrings.ToArray(), points.ToArray());
 
                         this._timer = LD51.MainScene.ICE_SMELT_TIME;
+
+                        this._visited.Enqueue(person);
+
+                        if (this._visited.Count > 4) {
+                            this._visited.Dequeue();
+                        }
+
                         this._currentPerson = this.FindPerson(((H5.Int.mul(this._deliveries, 50) + 100) | 0));
                         this._currentPerson.WantsIceCream();
                     }
@@ -1702,9 +1711,9 @@ H5.assembly("LD51", function ($asm, globals) {
                 return $en;
             },
             FindPerson: function (range) {
-                var ordered = System.Linq.Enumerable.from(this._people, LD51.PersonComponent).orderBy(H5.fn.bind(this, function (x) {
-                        return JuiceboxEngine.Math.JMath.Abs((JuiceboxEngine.Math.Vector2.op_Subtraction(x.GameObject.Transform.Position2D.$clone(), this._player.Transform.Position2D.$clone())).Length() - range);
-                    }));
+                var ordered = System.Linq.Enumerable.from(this._people, LD51.PersonComponent).except(this._visited).orderBy(H5.fn.bind(this, function (x) {
+                    return JuiceboxEngine.Math.JMath.Abs((JuiceboxEngine.Math.Vector2.op_Subtraction(x.GameObject.Transform.Position2D.$clone(), this._player.Transform.Position2D.$clone())).Length() - range);
+                }));
 
                 for (var i = 0; i < ordered.count(); i = (i + 1) | 0) {
                     if (H5.referenceEquals(ordered.elementAt(i), this._currentPerson)) {
