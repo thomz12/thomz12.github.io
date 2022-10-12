@@ -571,8 +571,8 @@ H5.assembly("LD51", function ($asm, globals) {
         },
         ctors: {
             init: function () {
-                this.LEADERBOARD_NAMES = System.Array.init(["score", "deliveries_high", "deliveries", "bonks", "drifts_high", "drifts"], System.String);
-                this.LEADERBOARD_NAMES_HUMAN = System.Array.init(["Highscores", "Ice sold", "Total ice sold", "Total Crashes", "Drifts", "Total Drifts"], System.String);
+                this.LEADERBOARD_NAMES = System.Array.init(["score_new", "score", "deliveries_high", "deliveries", "bonks", "drifts_high", "drifts"], System.String);
+                this.LEADERBOARD_NAMES_HUMAN = System.Array.init(["Highscores (new)", "Highscores (LD51)", "Ice sold", "Total ice sold", "Total Crashes", "Drifts", "Total Drifts"], System.String);
             },
             ctor: function (parent) {
                 this.$initialize();
@@ -1671,7 +1671,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                         this._backgroundAudio.Play();
 
                                         if (JuiceboxEngine.Playfab.PlayfabManager.Identity.LoggedIn) {
-                                            JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["attempts", "bonks", "score", "deliveries", "deliveries_high", "drifts", "drifts_high", "time_played"], System.String), System.Array.init([1, this._bonks, this._score, this._deliveries, this._deliveries, this._controller.TotalDrifts, this._controller.TotalDrifts, H5.Int.clip32(this._totalTime)], System.Int32));
+                                            JuiceboxEngine.Playfab.PlayfabManager.Leaderboard.SetLeaderboardEntry(System.Array.init(["attempts", "bonks", "score_new", "deliveries", "deliveries_high", "drifts", "drifts_high", "time_played"], System.String), System.Array.init([1, this._bonks, this._score, this._deliveries, this._deliveries, this._controller.TotalDrifts, this._controller.TotalDrifts, H5.Int.clip32(this._totalTime)], System.Int32));
                                         }
 
                                         $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.ctor(JuiceboxEngine.Coroutines.CoroutineManager.StartCoroutine(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(0.1, function (x) {
