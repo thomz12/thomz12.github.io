@@ -1737,6 +1737,10 @@ H5.assembly("LD51", function ($asm, globals) {
              * @return  {void}
              */
             PostUpdate: function () {
+                if (JuiceboxEngine.Input.InputManager.Instance.IsKeyUp("R")) {
+                    this.SceneManager.SwitchToScene(new LD51.MainScene(this.ResourceManager));
+                }
+
                 this._arrow.Transform.Position2D = JuiceboxEngine.Math.Vector2.op_Addition(this._player.Transform.Position2D.$clone(), new JuiceboxEngine.Math.Vector2.$ctor3(0, 4));
                 this._arrowSprite.Offset = JuiceboxEngine.Math.Vector2.op_Addition(new JuiceboxEngine.Math.Vector2.$ctor3(0, 32), JuiceboxEngine.Math.Vector2.op_Multiply$1(new JuiceboxEngine.Math.Vector2.$ctor3(0, 8), JuiceboxEngine.Math.JMath.Abs(JuiceboxEngine.Math.JMath.Sin(JuiceboxEngine.Util.Time.TotalSeconds * JuiceboxEngine.Math.JMath.PI * 2))));
 
