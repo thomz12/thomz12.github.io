@@ -2225,7 +2225,7 @@ H5.assembly("LD51", function ($asm, globals) {
                                 }
                                 case 1: {
                                     $en.current = new JuiceboxEngine.Coroutines.WaitForCoroutine.$ctor1(JuiceboxEngine.Coroutines.DefaultRoutines.Linear(1.0, H5.fn.bind(this, function (x) {
-                                            this._displayedScore = (this._score + H5.Int.clip32(JuiceboxEngine.Math.JMath.Interpolate(0, addedScore, x))) | 0;
+                                            this._displayedScore = (this._score + (((H5.Int.clip32(JuiceboxEngine.Math.JMath.Interpolate(0, addedScore, x)) - addedScore) | 0))) | 0;
                                             this._text.DisplayText = H5.toString(this._displayedScore);
                                         })));
                                         $s = 2;
