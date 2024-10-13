@@ -995,7 +995,7 @@ var ASM_CONSTS = {
  34072376: ($0) => { var device = miniaudio.get_device_by_index($0); device.webaudio.suspend(); device.state = miniaudio.device_state.stopped; }
 };
 function Alert(message) { alert(UTF8ToString(message)); }
-function Prompt(message,defaultInput) { var input = prompt(UTF8ToString(message), UTF8ToString(defaultInput)); return stringToNewUTF8(input); }
+function Prompt(message,defaultInput) { var input = prompt(UTF8ToString(message), UTF8ToString(defaultInput)); if (!input) { return null; } return stringToNewUTF8(input); }
 function SetItem(key,value) { localStorage.setItem(UTF8ToString(key), UTF8ToString(value)); }
 function GetItem(key) { var value = localStorage.getItem(UTF8ToString(key)); return stringToNewUTF8(value ? value : ""); }
 
@@ -9210,7 +9210,7 @@ var dynCall_iiiiij = Module['dynCall_iiiiij'] = createExportWrapper('dynCall_iii
 var dynCall_iiiiijj = Module['dynCall_iiiiijj'] = createExportWrapper('dynCall_iiiiijj');
 var dynCall_iiiiiijj = Module['dynCall_iiiiiijj'] = createExportWrapper('dynCall_iiiiiijj');
 var ___start_em_js = Module['___start_em_js'] = 34072502;
-var ___stop_em_js = Module['___stop_em_js'] = 34072946;
+var ___stop_em_js = Module['___stop_em_js'] = 34072975;
 function invoke_vii(index,a1,a2) {
   var sp = stackSave();
   try {
