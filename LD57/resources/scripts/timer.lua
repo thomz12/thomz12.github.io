@@ -1,5 +1,6 @@
 time = 0.0
 
+stop_timer = false
 local player = nil
 
 function start()
@@ -7,10 +8,15 @@ function start()
 end
 
 function update(delta)
+    if stop_timer then
+        return
+    end
+
     if player.scripts.submarine.game_over then
         time = time + delta * 500
     elseif player.scripts.submarine.started then
         time = time + delta
+        entity.ui_element.enabled = true
     end
     local minutes = math.floor(time / 60)
     local seconds = math.floor(time % 60)

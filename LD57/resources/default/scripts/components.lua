@@ -454,9 +454,9 @@ function juice.editor.component_ui.ui_image(entity)
 end
 
 function juice.editor.component_ui.ui_9_slice(entity)
-    juice.editor.ui.texture("image", entity.ui_image.image)
+    juice.editor.ui.texture("image", entity.ui_9_slice.image)
     juice.editor.ui.primitive("border", entity.ui_9_slice)
-    juice.editor.ui.color("color", entity.ui_panel.color)
+    juice.editor.ui.color("color", entity.ui_9_slice.color)
 end
 
 function juice.editor.component_ui.ui_text(entity)
